@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Image, Text, View, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { Template } from '../types';
 
 interface Props {
@@ -7,10 +8,18 @@ interface Props {
   onPress: (t: Template) => void;
 }
 
+const blurhash = 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
+
 export default function TemplateCard({ template, onPress }: Props) {
   return (
     <TouchableOpacity style={styles.card} onPress={() => onPress(template)}>
-      <Image source={{ uri: template.thumbnail }} style={styles.image} />
+      <Image
+        source={{ uri: template.thumbnail }}
+        style={styles.image}
+        placeholder={{ blurhash }}
+        contentFit="cover"
+        transition={200}
+      />
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={1}>
           {template.name}
@@ -30,13 +39,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
   },
-  image: { width: '100%', height: 160, resizeMode: 'cover' },
+  image: { width: '100%', height: 160 },
   info: { padding: 10 },
   name: { fontSize: 14, fontWeight: '600' },
   desc: { fontSize: 12, color: '#888', marginTop: 2 },

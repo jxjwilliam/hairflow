@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     meitu_api_key: str = ""
     meitu_api_secret: str = ""
+    meitu_api_appid: str = ""
     oss_endpoint: str = ""
     oss_bucket: str = ""
     oss_access_key: str = ""

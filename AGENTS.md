@@ -52,7 +52,7 @@ AI 虚拟发型试戴 App（MVP 阶段），面向国内理发行业。
 ```bash
 cd backend
 cp .env.example .env   # then fill in keys
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Mobile
@@ -61,7 +61,7 @@ cd mobile
 npx expo start
 ```
 
-Update `mobile/services/api.ts` `baseURL` to your dev machine's LAN IP.
+`mobile/services/api.ts` auto-detects the backend host per platform (web=localhost, Android emulator=10.0.2.2, device=LAN IP from expo).
 
 ## API Endpoints
 

@@ -5,7 +5,7 @@
     "category": "men",
     "tags": ["短发", "清爽", "商务"],
     "style_id": "meitu_style_001",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Short",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Short",
     "description": "干净利落的短发造型"
   },
   {
@@ -14,7 +14,7 @@
     "category": "men",
     "tags": ["短发", "纹理", "休闲"],
     "style_id": "meitu_style_002",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Texture",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Texture",
     "description": "有层次感的碎发效果"
   },
   {
@@ -23,7 +23,7 @@
     "category": "men",
     "tags": ["中发", "韩式", "时尚"],
     "style_id": "meitu_style_003",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Korean",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Korean",
     "description": "韩系微分发型"
   },
   {
@@ -32,7 +32,7 @@
     "category": "women",
     "tags": ["长发", "卷发", "优雅"],
     "style_id": "meitu_style_004",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Wave",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Wave",
     "description": "浪漫法式大波浪"
   },
   {
@@ -41,7 +41,7 @@
     "category": "women",
     "tags": ["中发", "直发", "知性"],
     "style_id": "meitu_style_005",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Lob",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Lob",
     "description": "优雅锁骨发"
   },
   {
@@ -50,7 +50,7 @@
     "category": "women",
     "tags": ["中发", "卷发", "可爱"],
     "style_id": "meitu_style_006",
-    "thumbnail": "https://via.placeholder.com/200x260?text=EggRoll",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=EggRoll",
     "description": "俏皮蛋蛋卷发型"
   },
   {
@@ -59,7 +59,7 @@
     "category": "women",
     "tags": ["长发", "直发", "个性"],
     "style_id": "meitu_style_007",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Princess",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Princess",
     "description": "二次元感公主切"
   },
   {
@@ -68,7 +68,7 @@
     "category": "men",
     "tags": ["超短", "硬朗", "美式"],
     "style_id": "meitu_style_008",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Buzz",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Buzz",
     "description": "硬朗寸头"
   },
   {
@@ -77,7 +77,7 @@
     "category": "women",
     "tags": ["长发", "直发", "经典"],
     "style_id": "meitu_style_009",
-    "thumbnail": "https://via.placeholder.com/200x260?text=LongStraight",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=LongStraight",
     "description": "经典黑长直"
   },
   {
@@ -86,7 +86,7 @@
     "category": "men",
     "tags": ["短发", "复古", "绅士"],
     "style_id": "meitu_style_010",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Pompadour",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Pompadour",
     "description": "经典复古油头"
   },
   {
@@ -95,7 +95,7 @@
     "category": "women",
     "tags": ["中发", "卷发", "复古"],
     "style_id": "meitu_style_011",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Wool",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Wool",
     "description": "蓬松羊毛卷"
   },
   {
@@ -104,7 +104,7 @@
     "category": "men",
     "tags": ["中发", "纹理", "成熟"],
     "style_id": "meitu_style_012",
-    "thumbnail": "https://via.placeholder.com/200x260?text=SidePart",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=SidePart",
     "description": "成熟侧分纹理"
   },
   {
@@ -113,7 +113,7 @@
     "category": "women",
     "tags": ["短发", "直发", "干练"],
     "style_id": "meitu_style_013",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Bob",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Bob",
     "description": "经典波波头"
   },
   {
@@ -122,7 +122,7 @@
     "category": "men",
     "tags": ["超短", "个性", "潮流"],
     "style_id": "meitu_style_014",
-    "thumbnail": "https://via.placeholder.com/200x260?text=Spike",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Spike",
     "description": "个性飞机头"
   },
   {
@@ -131,7 +131,7 @@
     "category": "women",
     "tags": ["长发", "卷发", "甜美"],
     "style_id": "meitu_style_015",
-    "thumbnail": "https://via.placeholder.com/200x260?text=WoodHorse",
+    "thumbnail": "https://placehold.co/200x260/EEE/333?text=WoodHorse",
     "description": "甜美木马卷"
   }
 ]
