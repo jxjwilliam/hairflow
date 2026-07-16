@@ -32,3 +32,4 @@ mobile/ios/Pods/
 
 # Alembic
 backend/alembic/versions/__pycache__/
+.omo/

@@ -24,7 +24,8 @@
     "plugins": [
       "expo-router",
       "expo-image",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-splash-screen"
     ]
   }
 }

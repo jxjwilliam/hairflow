@@ -1,23 +1,59 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
-import * as MediaLibrary from 'expo-media-library';
-import * as Sharing from 'expo-sharing';
+import { View, TouchableOpacity, Text, StyleSheet, Alert, Platform } from 'react-native';
 
 interface Props {
   imageUrl: string;
   onRetry?: () => void;
 }
 
+async function saveImage(url: string) {
+  if (Platform.OS === 'web') {
+    // Web: trigger download via anchor click
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'hairstyle-result.png';
+    a.click();
+    return;
+  }
+
+  // Native: use expo-media-library
+  const { requestPermissionsAsync, saveToLibraryAsync } = await import(
+    'expo-media-library'
+  );
+  const { status } = await requestPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert('需要权限', '请在设置中允许保存到相册');
+    return;
+  }
+  await saveToLibraryAsync(url);
+  Alert.alert('已保存', '效果图已保存到相册');
+}
+
+async function shareImage(url: string) {
+  if (Platform.OS === 'web') {
+    // Web: use Web Share API if available
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      await navigator.share({
+        title: 'AI 发型效果图',
+        url,
+      });
+    } else {
+      // Fallback: copy URL to clipboard
+      await navigator.clipboard.writeText(url);
+      Alert.alert('链接已复制', '分享链接已复制到剪贴板');
+    }
+    return;
+  }
+
+  // Native: use expo-sharing
+  const { shareAsync } = await import('expo-sharing');
+  await shareAsync(url);
+}
+
 export default function ActionButtons({ imageUrl, onRetry }: Props) {
   const handleSave = async () => {
     try {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('需要权限', '请在设置中允许保存到相册');
-        return;
-      }
-      await MediaLibrary.saveToLibraryAsync(imageUrl);
-      Alert.alert('已保存', '效果图已保存到相册');
+      await saveImage(imageUrl);
     } catch {
       Alert.alert('保存失败', '请稍后重试');
     }
@@ -25,7 +61,7 @@ export default function ActionButtons({ imageUrl, onRetry }: Props) {
 
   const handleShare = async () => {
     try {
-      await Sharing.shareAsync(imageUrl);
+      await shareImage(imageUrl);
     } catch {
       // user cancelled
     }
@@ -34,14 +70,14 @@ export default function ActionButtons({ imageUrl, onRetry }: Props) {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.btn} onPress={handleSave}>
-        <Text style={styles.btnText}>💾 保存</Text>
+        <Text style={styles.btnText}>保存</Text>
       </TouchableOpacity>
       <TouchableOpacity style={[styles.btn, styles.btnSecondary]} onPress={handleShare}>
-        <Text style={styles.btnText}>📤 分享</Text>
+        <Text style={styles.btnText}>分享</Text>
       </TouchableOpacity>
       {onRetry && (
         <TouchableOpacity style={[styles.btn, styles.btnOutline]} onPress={onRetry}>
-          <Text style={[styles.btnText, styles.btnTextOutline]}>🔄 重试</Text>
+          <Text style={[styles.btnText, styles.btnTextOutline]}>重试</Text>
         </TouchableOpacity>
       )}
     </View>
