@@ -59,3 +59,40 @@
 ##### 精简时尚短版（适合方案封面/简介）
 一款适配手机、平板双端的国产AI虚拟发型试戴应用，专为美发消费场景打造。依托阿里云国产云服务、本土AI大模型与生图能力，用户上传人像即可一键融合海量潮流3D发型模板，自由调整发色、发长等参数实时重绘预览。支持手机号、微信、支付宝多渠道登录，采用点数充值/会员订阅商业化模式，每次AI生成功能按需扣点，配套完整云端数据存储与国内合规支付通道，足不出户直观预演适配自身的理想发型。
 ```
+
+
+## 美图AI: agentichairstyling
+
+```
+应用名称：agentichairstyling
+应用平台：Android,iOS,小程序
+应用类型：广告,工具
+公司名称：Best IT Consulting
+联系人： 13060412448
+邮箱：
+手机：13060412448
+申请时间：2026-07-17 00:48:25
+```
+
+## 当前状态（2026-07-16）
+
+### 问题
+`POST /api/generate` 返回 502 Bad Gateway，美图 API 报 `[90002] GATEWAY_AUTHORIZED_ERROR`
+
+### 已做的代码修复
+1. **`backend/app/services/meitu.py`**: `generate_hairstyle()` 和 `regenerate_hairstyle()` 支持传入 `mask_base64`，构建带遮罩的 `media_info_list`
+2. **`backend/app/routers/generation.py`**: 增加模板查找（`req.style_id` → `template["style_id"]`）和头发分割步骤
+
+### 根因（代码修复无法解决）
+美图 API Key 没有 `portrait_edit`（百变发型）接口的付费权限，返回 `GATEWAY_AUTHORIZED_ERROR`。
+- `hairclassifier` 接口也返回 `Empty media_data`，说明免费 Key 权限受限
+- `hair_segment` 接口连接异常
+- `portrait_edit` 明确返回 `[90002] GATEWAY_AUTHORIZED_ERROR`
+
+### 解决路径
+需要联系美图开放平台购买 `portrait_edit` 接口访问权限：
+1. 完成企业实名认证
+2. 接入申请中仅保留 Android / iOS / HTML5 / 小程序平台
+3. 应用类型仅勾选「工具」，不勾选「广告」
+4. 推荐按量计费（充值 8000 元余额），不推荐包年 6700 元/10 万次
+5. 确保 API 请求从国内阿里云 ECS 发出，海外 IP 直连会被拦截
