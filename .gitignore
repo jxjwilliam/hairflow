@@ -1,0 +1,34 @@
+# Tool metadata / sandbox（不提交）
+.superpowers/
+sandbox/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# React Native
+mobile/node_modules/
+mobile/.expo/
+mobile/ios/Pods/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 环境变量
+.env
+.env.local
+
+# Docker
+*.log
+
+# macOS
+.DS_Store
+
+# Alembic
+backend/alembic/versions/__pycache__/

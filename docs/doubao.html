@@ -1,0 +1,415 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国产AI虚拟发型预视工具应用实现分析报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #FFFFFF;
+        }
+        .card {
+            background-color: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 1.25rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: hidden;
+            position: relative;
+        }
+        .card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        .highlight-gradient-blue { background: linear-gradient(135deg, rgba(59, 130, 246, 0), rgba(59, 130, 246, 0.05)); }
+        .highlight-gradient-purple { background: linear-gradient(135deg, rgba(139, 92, 246, 0), rgba(139, 92, 246, 0.05)); }
+        .highlight-gradient-green { background: linear-gradient(135deg, rgba(34, 197, 94, 0), rgba(34, 197, 94, 0.05)); }
+        .highlight-gradient-amber { background: linear-gradient(135deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.05)); }
+        .highlight-gradient-rose { background: linear-gradient(135deg, rgba(244, 63, 94, 0), rgba(244, 63, 94, 0.05)); }
+    </style>
+</head>
+<body class="bg-white">
+    <div class="max-w-7xl mx-auto p-4 md:p-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+            <!-- 标题卡片 -->
+            <div class="card md:col-span-4 p-8 flex flex-col justify-center">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-blue"></div>
+                <div class="relative">
+                    <div class="text-sm font-semibold text-blue-600 tracking-wider uppercase">Hair Preview AI Analysis</div>
+                    <div class="text-4xl md:text-5xl font-bold text-gray-900 mt-2">国产AI虚拟发型预视工具</div>
+                    <div class="text-4xl md:text-5xl font-bold text-gray-900">应用实现分析报告</div>
+                    <div class="mt-6 text-gray-600 max-w-3xl">为创业团队构建面向国内理发行业的AI虚拟发型预视工具提供全链路实现分析，从技术架构到商业落地。</div>
+                </div>
+            </div>
+
+            <!-- 核心实现逻辑卡片 -->
+            <div class="card md:col-span-2 md:row-span-2 p-8 flex flex-col">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-purple"></div>
+                <div class="relative flex-grow flex flex-col">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-sitemap text-2xl text-purple-600"></i>
+                        <div class="text-2xl font-bold text-gray-900">核心实现逻辑</div>
+                    </div>
+                    <div class="text-gray-600 mt-2">采用“上传人像-模板融合-3D预览编辑”的成熟技术路径，在第三方成熟API开源框架基础上进行二次开发。</div>
+                    
+                    <div class="mt-8 space-y-6 flex-grow">
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold flex-shrink-0">1</div>
+                            <div>
+                                <div class="font-bold text-gray-800">上传人像</div>
+                                <div class="text-gray-600 text-sm">支持相册选择与相机拍摄，进行标准化预处理。</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold flex-shrink-0">2</div>
+                            <div>
+                                <div class="font-bold text-gray-800">模板融合</div>
+                                <div class="text-gray-600 text-sm">基于3D几何对齐与光影匹配技术，将发型模板与用户头像自然融合。</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold flex-shrink-0">3</div>
+                            <div>
+                                <div class="font-bold text-gray-800">3D预览编辑</div>
+                                <div class="text-gray-600 text-sm">提供多视角预览与参数调整，实现“所见即所得”的编辑体验。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 技术栈选择原则卡片 -->
+            <div class="card md:col-span-2 p-8">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-green"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-compass-drafting text-2xl text-green-600"></i>
+                        <div class="text-2xl font-bold text-gray-900">技术栈选择原则</div>
+                    </div>
+                    <div class="mt-6 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-check-circle text-green-500"></i>
+                            <span class="text-gray-700">优先开源/免费资源，降低初期沉没成本</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-check-circle text-green-500"></i>
+                            <span class="text-gray-700">适配国产生态，符合行业技术环境约束</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-check-circle text-green-500"></i>
+                            <span class="text-gray-700">成熟稳定优先，附带可扩展能力</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-check-circle text-green-500"></i>
+                            <span class="text-gray-700">支撑多端覆盖，适配移动设备性能需求</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 商业模式卡片 -->
+            <div class="card md:col-span-2 p-8">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-amber"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-sack-dollar text-2xl text-amber-600"></i>
+                        <div class="text-2xl font-bold text-gray-900">混合变现模式</div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-3 gap-4 text-center">
+                        <div class="bg-amber-50 rounded-lg p-4">
+                            <div class="text-3xl font-bold text-amber-600">免费</div>
+                            <div class="text-xs text-gray-500 mt-1">Free Trial</div>
+                        </div>
+                        <div class="bg-amber-50 rounded-lg p-4">
+                            <div class="text-3xl font-bold text-amber-600">点数</div>
+                            <div class="text-xs text-gray-500 mt-1">Points</div>
+                        </div>
+                        <div class="bg-amber-50 rounded-lg p-4">
+                            <div class="text-3xl font-bold text-amber-600">订阅</div>
+                            <div class="text-xs text-gray-500 mt-1">Subscription</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-600">精准捕捉用户在理发前“想预览真实效果”的核心痛点，通过分层付费模式最大化商业价值。</div>
+                </div>
+            </div>
+
+            <!-- 核心AI引擎选型分析卡片 -->
+            <div class="card md:col-span-4 p-8">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-blue"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-brain text-2xl text-blue-600"></i>
+                        <div class="text-2xl font-bold text-gray-900">核心AI引擎选型分析</div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white border border-gray-200 rounded-xl p-6">
+                            <div class="font-bold text-gray-800 mb-2">方案一：开源框架本地部署组合</div>
+                            <div class="text-sm text-gray-600 mb-4">将不同技术框架的核心能力组合使用，搭建完整的发型预视技术管线。</div>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2"><i class="fa-solid fa-cube text-blue-500"></i><span class="text-sm">HairPort (核心技术底座)</span></div>
+                                <div class="flex items-center gap-2"><i class="fa-solid fa-image-portrait text-blue-500"></i><span class="text-sm">ACE++ (图像填充工具)</span></div>
+                                <div class="flex items-center gap-2"><i class="fa-solid fa-user-astronaut text-blue-500"></i><span class="text-sm">MediaPipe FaceMesh (人脸检测)</span></div>
+                            </div>
+                            <div class="mt-4 flex justify-between text-xs">
+                                <span class="text-green-600"><i class="fa-solid fa-circle-plus"></i> 完全开源免费</span>
+                                <span class="text-red-600"><i class="fa-solid fa-circle-minus"></i> 需额外投入调试优化</span>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-xl p-6">
+                            <div class="font-bold text-gray-800 mb-2">方案二：接入第三方商用API</div>
+                            <div class="text-sm text-gray-600 mb-4">无需投入稀缺的技术资源自研底层能力，接入周期更短、上线风险更低。</div>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-purple-500"></i><span class="text-sm">YouCam 发型设计API</span></div>
+                                <div class="flex items-center gap-2"><i class="fa-solid fa-magic text-purple-500"></i><span class="text-sm">美图奇想大模型API</span></div>
+                            </div>
+                            <div class="mt-4 flex justify-between text-xs">
+                                <span class="text-green-600"><i class="fa-solid fa-circle-plus"></i> 接入周期短、上线风险低</span>
+                                <span class="text-red-600"><i class="fa-solid fa-circle-minus"></i> 有调用次数和成本限制</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="font-semibold text-blue-800">推荐方案</div>
+                        <div class="text-sm text-blue-700 mt-1">采用“第三方API接入为主，开源框架作为备选补充”的技术方案：初期直接接入成熟API，大幅缩短开发周期；后续用户量突破十万级后，再逐步替换为开源框架自主部署。</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 应用架构设计卡片 -->
+            <div class="card md:col-span-4 p-8">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-rose"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-layer-group text-2xl text-rose-600"></i>
+                        <div class="text-2xl font-bold text-gray-900">应用架构设计</div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white border border-gray-200 rounded-xl p-6">
+                            <div class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-mobile-screen-button text-rose-500"></i>移动端/平板端</div>
+                            <div class="text-sm text-gray-600 mb-3">采用跨平台开发方案，仅需一套代码即可覆盖多端运行。</div>
+                            <div class="text-xs font-semibold text-gray-500">技术选型:</div>
+                            <div class="mt-1 text-sm">Next.js + Tauri</div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-xl p-6">
+                            <div class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-server text-rose-500"></i>后端技术</div>
+                            <div class="text-sm text-gray-600 mb-3">采用混合技术架构，根据不同业务场景匹配合适的技术组件。</div>
+                            <div class="text-xs font-semibold text-gray-500">技术选型:</div>
+                            <div class="mt-1 text-sm">Java (Spring Boot) + Python (FastAPI)</div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-xl p-6">
+                            <div class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-cloud text-rose-500"></i>云服务部署 (阿里云)</div>
+                            <div class="text-sm text-gray-600 mb-3">采用“阿里云PaaS平台+弹性裸金属服务器”的组合方案。</div>
+                            <div class="text-xs font-semibold text-gray-500">核心服务:</div>
+                            <div class="mt-1 text-sm">ACK, ECS, OSS, CDN, WAF</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 落地实施路径卡片 -->
+            <div class="card md:col-span-4 p-8">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-green"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-road text-2xl text-green-600"></i>
+                        <div class="text-2xl font-bold text-gray-900">落地实施路径</div>
+                    </div>
+                    <div class="mt-6">
+                        <div class="relative">
+                            <!-- 时间线 -->
+                            <div class="absolute left-0 top-0 h-full w-0.5 bg-green-200"></div>
+                            <div class="space-y-8">
+                                <div class="relative pl-8">
+                                    <div class="absolute left-0 top-1 w-4 h-4 rounded-full bg-green-500"></div>
+                                    <div class="font-bold text-gray-800">阶段一：启动筹备与技术准备</div>
+                                    <div class="text-sm text-gray-600 mt-1">完成所有基础资源申请、技术方案设计、开发环境准备。</div>
+                                    <div class="text-xs text-green-600 mt-1">预计用时: 2-3周</div>
+                                </div>
+                                <div class="relative pl-8">
+                                    <div class="absolute left-0 top-1 w-4 h-4 rounded-full bg-green-500"></div>
+                                    <div class="font-bold text-gray-800">阶段二：核心开发与MVP版本落地</div>
+                                    <div class="text-sm text-gray-600 mt-1">完成MVP版本开发、测试，仅保留能验证核心假设的必要功能。</div>
+                                    <div class="text-xs text-green-600 mt-1">预计用时: 4-8周</div>
+                                </div>
+                                <div class="relative pl-8">
+                                    <div class="absolute left-0 top-1 w-4 h-4 rounded-full bg-green-500"></div>
+                                    <div class="font-bold text-gray-800">阶段三：灰度上线与运营准备</div>
+                                    <div class="text-sm text-gray-600 mt-1">完成上线运营准备、灰度发布验证，确保正式上线后用户体验。</div>
+                                    <div class="text-xs text-green-600 mt-1">预计用时: 1-2周</div>
+                                </div>
+                                <div class="relative pl-8">
+                                    <div class="absolute left-0 top-1 w-4 h-4 rounded-full bg-green-500"></div>
+                                    <div class="font-bold text-gray-800">阶段四：正式上线与运营</div>
+                                    <div class="text-sm text-gray-600 mt-1">正式发布应用，开放所有渠道用户访问，密切监控性能指标。</div>
+                                    <div class="text-xs text-green-600 mt-1">持续进行</div>
+                                </div>
+                                <div class="relative pl-8">
+                                    <div class="absolute left-0 top-1 w-4 h-4 rounded-full bg-green-500"></div>
+                                    <div class="font-bold text-gray-800">阶段五：功能迭代与产品优化</div>
+                                    <div class="text-sm text-gray-600 mt-1">根据真实市场反馈，优化产品体验，提升付费转化率与用户留存率。</div>
+                                    <div class="text-xs text-green-600 mt-1">持续进行</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 风险与替代方案卡片 -->
+            <div class="card md:col-span-2 p-8">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-amber"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-triangle-exclamation text-2xl text-amber-600"></i>
+                        <div class="text-2xl font-bold text-gray-900">核心技术风险</div>
+                    </div>
+                    <div class="mt-6 space-y-4">
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            <div class="font-semibold text-gray-800">风险一：3D发型融合效果不及预期</div>
+                            <div class="text-sm text-gray-600 mt-1">受限于用户上传照片质量差异，可能出现发型边缘违和、光影不匹配等问题。</div>
+                            <div class="mt-2 text-xs font-semibold text-amber-700">应对策略：大量适配性测试优化，增加用户拍照引导。</div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            <div class="font-semibold text-gray-800">风险二：第三方API调用稳定性不足</div>
+                            <div class="text-sm text-gray-600 mt-1">第三方API可能出现服务不可用、延迟过高、调用频次受限等情况。</div>
+                            <div class="mt-2 text-xs font-semibold text-amber-700">应对策略：采用多厂商API冗余设计方案。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 关键指标卡片 -->
+            <div class="card md:col-span-2 p-8">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-blue"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-chart-line text-2xl text-blue-600"></i>
+                        <div class="text-2xl font-bold text-gray-900">关键成功指标</div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-2 gap-4">
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                            <div class="text-3xl font-bold text-blue-600">< 10s</div>
+                            <div class="text-xs text-gray-500 mt-1">生成耗时</div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                            <div class="text-3xl font-bold text-blue-600">> 85%</div>
+                            <div class="text-xs text-gray-500 mt-1">用户满意度</div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                            <div class="text-3xl font-bold text-blue-600">> 15%</div>
+                            <div class="text-xs text-gray-500 mt-1">付费转化率</div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                            <div class="text-3xl font-bold text-blue-600">> 100</div>
+                            <div class="text-xs text-gray-500 mt-1">发型模板数</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 产品功能概览卡片 -->
+            <div class="card md:col-span-4 p-8">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-purple"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-star text-2xl text-purple-600"></i>
+                        <div class="text-2xl font-bold text-gray-900">核心功能设计</div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                            <i class="fa-solid fa-image text-4xl text-purple-500 mb-4"></i>
+                            <div class="font-bold text-gray-800">头像采集与预处理</div>
+                            <div class="text-xs text-gray-600 mt-2">引导用户拍摄标准照片，进行人脸检测、特征点定位与图像优化。</div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                            <i class="fa-solid fa-cubes text-4xl text-purple-500 mb-4"></i>
+                            <div class="font-bold text-gray-800">3D发型融合与渲染</div>
+                            <div class="text-xs text-gray-600 mt-2">基于3D几何对齐与光影匹配技术，将发型模板与用户头像自然融合。</div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                            <i class="fa-solid fa-sliders text-4xl text-purple-500 mb-4"></i>
+                            <div class="font-bold text-gray-800">发型参数编辑</div>
+                            <div class="text-xs text-gray-600 mt-2">提供可视化的简易编辑操作，调整发型长度、卷曲度、颜色等参数。</div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                            <i class="fa-solid fa-share-nodes text-4xl text-purple-500 mb-4"></i>
+                            <div class="font-bold text-gray-800">结果输出与分享</div>
+                            <div class="text-xs text-gray-600 mt-2">支持高清导出、对比图生成与社交分享，方便用户与发型师沟通。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 市场验证卡片 -->
+            <div class="card md:col-span-4 p-8">
+                <div class="absolute top-0 left-0 w-full h-full highlight-gradient-green"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-bullseye text-2xl text-green-600"></i>
+                        <div class="text-2xl font-bold text-gray-900">市场需求与竞争优势</div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="font-bold text-gray-800 mb-4">核心痛点</div>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-lightbulb text-green-500 mt-1"></i>
+                                    <div>
+                                        <div class="font-semibold text-gray-700">理发前无法预览效果</div>
+                                        <div class="text-sm text-gray-600">用户无法在理发前直观看到新发型的实际效果，容易产生不满意的结果。</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-comments text-green-500 mt-1"></i>
+                                    <div>
+                                        <div class="font-semibold text-gray-700">与发型师沟通困难</div>
+                                        <div class="text-sm text-gray-600">用户难以用语言准确描述自己想要的发型，导致理发结果与预期不符。</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-money-bill-trend-up text-green-500 mt-1"></i>
+                                    <div>
+                                        <div class="font-semibold text-gray-700">试错成本高</div>
+                                        <div class="text-sm text-gray-600">一次不满意的理发需要较长时间恢复，且浪费金钱，用户决策谨慎。</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="font-bold text-gray-800 mb-4">竞争优势</div>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-rocket text-green-500 mt-1"></i>
+                                    <div>
+                                        <div class="font-semibold text-gray-700">快速上线</div>
+                                        <div class="text-sm text-gray-600">基于成熟API和开源框架，快速实现MVP，抢占市场先机。</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-earth-asia text-green-500 mt-1"></i>
+                                    <div>
+                                        <div class="font-semibold text-gray-700">本土化适配</div>
+                                        <div class="text-sm text-gray-600">针对亚洲人发质、头型、脸型进行优化，提供更符合国内用户审美的发型模板。</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-hand-holding-dollar text-green-500 mt-1"></i>
+                                    <div>
+                                        <div class="font-semibold text-gray-700">灵活的商业模式</div>
+                                        <div class="text-sm text-gray-600">采用“免费试用+点数消费+会员订阅”的混合模式，覆盖不同用户群体。</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
