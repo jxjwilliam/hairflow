@@ -23,7 +23,7 @@
 更好的做法是每个工具/Agent 只写自己的目录，共享区通过 PR/MR 合入：
 
 ```
-haircut/
+hairstyle/
 ├── backend/                 # 共享区 — 最终产出
 │   ├── app/
 │   │   ├── main.py

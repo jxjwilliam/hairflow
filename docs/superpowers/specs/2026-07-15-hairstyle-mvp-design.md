@@ -148,7 +148,7 @@ backend/app/
 ## 8. 项目结构（Monorepo）
 
 ```
-haircut/
+hairstyle/
 ├── mobile/                 # React Native (Expo)
 │   ├── app/               # Expo Router 页面
 │   ├── components/        # 可复用组件

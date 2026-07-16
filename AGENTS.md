@@ -1,4 +1,4 @@
-# HairCut — Agent Guide
+# Hairstyle — Agent Guide
 
 AI 虚拟发型试戴 App（MVP 阶段），面向国内理发行业。
 

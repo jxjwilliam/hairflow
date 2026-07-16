@@ -1,4 +1,4 @@
-# AI Haircut MVP — Implementation Plan
+# AI Hairstyle MVP — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -13,7 +13,7 @@
 ## File Structure
 
 ```
-haircut/
+hairstyle/
 ├── mobile/                          # Expo app
 │   ├── app/
 │   │   ├── _layout.tsx              # Root layout + QueryClientProvider
@@ -75,7 +75,7 @@ haircut/
 - [ ] **Step 1: Create Expo project**
 
 ```bash
-cd /Users/william.jiang/my-tests/my-fun/haircut
+cd /Users/william.jiang/my-tests/my-fun/hairstyle
 npx create-expo-app@latest mobile --template blank-typescript
 cd mobile
 npx expo install expo-router expo-image expo-image-picker expo-media-library expo-sharing @tanstack/react-query axios react-native-safe-area-context react-native-screens
@@ -84,7 +84,7 @@ npx expo install expo-router expo-image expo-image-picker expo-media-library exp
 - [ ] **Step 2: Verify project runs**
 
 ```bash
-cd /Users/william.jiang/my-tests/my-fun/haircut/mobile
+cd /Users/william.jiang/my-tests/my-fun/hairstyle/mobile
 npx expo start --no-dev --minify 2>&1 | head -5
 ```
 
@@ -103,9 +103,9 @@ Expected: Metro bundler starts, shows QR code.
 - [ ] **Step 1: Create backend directory structure**
 
 ```bash
-mkdir -p /Users/william.jiang/my-tests/my-fun/haircut/backend/app/{models,services,routers}
-mkdir -p /Users/william.jiang/my-tests/my-fun/haircut/backend/data
-mkdir -p /Users/william.jiang/my-tests/my-fun/haircut/backend/tests
+mkdir -p /Users/william.jiang/my-tests/my-fun/hairstyle/backend/app/{models,services,routers}
+mkdir -p /Users/william.jiang/my-tests/my-fun/hairstyle/backend/data
+mkdir -p /Users/william.jiang/my-tests/my-fun/hairstyle/backend/tests
 ```
 
 - [ ] **Step 2: Create requirements.txt**
@@ -153,7 +153,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import generation, templates
 
-app = FastAPI(title="Haircut MVP API", version="0.1.0")
+app = FastAPI(title="Hairstyle MVP API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -174,7 +174,7 @@ async def root():
 - [ ] **Step 6: Verify backend starts**
 
 ```bash
-cd /Users/william.jiang/my-tests/my-fun/haircut/backend
+cd /Users/william.jiang/my-tests/my-fun/hairstyle/backend
 pip install -r requirements.txt -q
 uvicorn app.main:app --port 8000 &
 sleep 2
@@ -435,7 +435,7 @@ async def get_template(template_id: str):
 - [ ] **Step 3: Quick test**
 
 ```bash
-cd /Users/william.jiang/my-tests/my-fun/haircut/backend
+cd /Users/william.jiang/my-tests/my-fun/hairstyle/backend
 uvicorn app.main:app --port 8000 &
 sleep 2
 curl -s http://localhost:8000/api/templates | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'{len(d)} templates loaded')"
@@ -626,7 +626,7 @@ async def regenerate(req: RegenerateRequest):
 - [ ] **Step 1: Start server and test endpoints**
 
 ```bash
-cd /Users/william.jiang/my-tests/my-fun/haircut/backend
+cd /Users/william.jiang/my-tests/my-fun/hairstyle/backend
 uvicorn app.main:app --port 8000 &
 sleep 2
 echo "=== Root ===" && curl -s http://localhost:8000/
@@ -1253,7 +1253,7 @@ ALI_CLOUD_VISION_KEY=
 - [ ] **Step 1: Start backend and verify endpoints**
 
 ```bash
-cd /Users/william.jiang/my-tests/my-fun/haircut/backend
+cd /Users/william.jiang/my-tests/my-fun/hairstyle/backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000 &
 sleep 2
 echo "=== Health ===" && curl -s http://localhost:8000/ | python3 -m json.tool
