@@ -43,16 +43,10 @@ hairstyle/
 │   ├── ds_plan.md
 │   ├── ds_workflow.md       # 本文件
 │   └── OWNERS.md            # 文件所有权注册表
-├── .github/workflows/       # 共享 CI
-├── sandbox/                 # 各工具独立沙盒区
-│   ├── deepseek/            # DeepSeek 独占 — 写入无冲突
-│   ├── opencode/            # OpenCode 独占
-│   ├── cursor/              # Cursor 独占
-│   └── claude/              # Claude Code 独占
 └── .gitignore
 ```
 
-**规则**: 各工具在 `sandbox/<tool>/` 下自由创建文件，不会冲突。将产出集成到 `backend/`、`mobile/` 时通过 Git 分支合入。
+所有开发直接在 `backend/`、`mobile/`、`docs/` 目录进行，通过 Git 分支隔离。
 
 ---
 
@@ -202,7 +196,7 @@ DeepSeek 的 sub-agents 通过我（主 Agent）来协调。流程：
 逐个验证产出 → 合成到共享文件 → 更新 OWNERS.md → 提交
 ```
 
-Sub-agent 不直接写共享区文件。它们在自己的 sandbox 或通过我中转写入。
+Sub-agent 通过主 Agent 中转写入共享区文件。
 
 ---
 
@@ -242,9 +236,6 @@ grep "<target-file>" docs/OWNERS.md
 ## 9. .gitignore 建议
 
 ```gitignore
-# 各工具 sandbox（可选是否提交）
-sandbox/
-
 # Python
 __pycache__/
 *.pyc
@@ -285,7 +276,7 @@ mobile/ios/Pods/
 - [ ] 检查 `docs/OWNERS.md` 确认目标文件未被占用
 - [ ] 在 `docs/OWNERS.md` 注册你的工作
 - [ ] 创建独立分支: `git checkout -b <tool>/<task>`
-- [ ] 写入 `sandbox/<tool>/` 进行实验；合入时才写共享区
+- [ ] 在独立分支上开发；合入时才写共享区
 - [ ] 完成 → 更新 OWNERS.md → 推送分支 → 创建 PR
 
 ---
