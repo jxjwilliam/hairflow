@@ -1,10 +1,16 @@
 import json
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from scripts.generate_thumbnails import (
+    _extract_history_error,
     build_txt2img_workflow,
+    download_image,
     thumbnail_rel_path,
     update_template_thumbnails,
+    wait_for_image,
 )
 
 
@@ -50,3 +56,109 @@ def test_update_template_thumbnails_atomic(tmp_path: Path):
     data = json.loads(path.read_text(encoding="utf-8"))
     assert data[0]["thumbnail"] == "/static/thumbnails/m1.png"
     assert data[1]["thumbnail"] == "https://placehold.co/y"
+
+
+def test_extract_history_error_from_status():
+    entry = {
+        "status": {
+            "status_str": "error",
+            "completed": True,
+            "messages": [
+                [
+                    "execution_error",
+                    {
+                        "node_id": "5",
+                        "exception_message": "CUDA out of memory",
+                    },
+                ]
+            ],
+        },
+        "outputs": {},
+    }
+    assert _extract_history_error(entry, "abc-123") == "node 5: CUDA out of memory"
+
+
+def test_extract_history_error_completed_without_images():
+    entry = {
+        "status": {"status_str": "success", "completed": True, "messages": []},
+        "outputs": {"7": {"images": []}},
+    }
+    assert _extract_history_error(entry, "abc-123") == "workflow completed without output images"
+
+
+def test_wait_for_image_raises_on_history_error():
+    prompt_id = "fail-id"
+    history = {
+        prompt_id: {
+            "status": {
+                "status_str": "error",
+                "completed": True,
+                "messages": [
+                    ["execution_error", {"exception_message": "checkpoint not found"}]
+                ],
+            },
+            "outputs": {},
+        }
+    }
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.json.return_value = history
+
+    with patch("scripts.generate_thumbnails.httpx.get", return_value=mock_resp):
+        with pytest.raises(RuntimeError, match="prompt_id=fail-id"):
+            wait_for_image("http://127.0.0.1:8188", prompt_id, timeout=1.0)
+
+
+def test_wait_for_image_returns_image_entry_with_subfolder():
+    prompt_id = "ok-id"
+    history = {
+        prompt_id: {
+            "status": {"status_str": "success", "completed": True, "messages": []},
+            "outputs": {
+                "7": {
+                    "images": [
+                        {
+                            "filename": "catalog_thumb_00001_.png",
+                            "subfolder": "2026-07-17",
+                            "type": "output",
+                        }
+                    ]
+                }
+            },
+        }
+    }
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.json.return_value = history
+
+    with patch("scripts.generate_thumbnails.httpx.get", return_value=mock_resp):
+        image = wait_for_image("http://127.0.0.1:8188", prompt_id, timeout=1.0)
+
+    assert image["filename"] == "catalog_thumb_00001_.png"
+    assert image["subfolder"] == "2026-07-17"
+    assert image["type"] == "output"
+
+
+def test_download_image_passes_subfolder_and_type():
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.content = b"png-bytes"
+
+    with patch("scripts.generate_thumbnails.httpx.get", return_value=mock_resp) as mock_get:
+        data = download_image(
+            "http://127.0.0.1:8188",
+            "catalog_thumb_00001_.png",
+            subfolder="2026-07-17",
+            image_type="output",
+        )
+
+    assert data == b"png-bytes"
+    mock_get.assert_called_once_with(
+        "http://127.0.0.1:8188/view",
+        params={
+            "filename": "catalog_thumb_00001_.png",
+            "subfolder": "2026-07-17",
+            "type": "output",
+        },
+        timeout=30,
+    )

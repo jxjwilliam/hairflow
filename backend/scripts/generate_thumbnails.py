@@ -134,7 +134,65 @@ def submit_workflow(base_url: str, workflow: dict) -> str:
     return data["prompt_id"]
 
 
-def wait_for_image(base_url: str, prompt_id: str, timeout: float = TIMEOUT) -> str:
+def _extract_history_error(entry: dict, prompt_id: str) -> str | None:
+    """Return a human-readable error if ComfyUI recorded workflow failure."""
+    if entry.get("error"):
+        return str(entry["error"])
+
+    status = entry.get("status") or {}
+    status_str = status.get("status_str")
+    if status_str == "error":
+        for message in status.get("messages") or []:
+            if not isinstance(message, (list, tuple)) or len(message) < 2:
+                continue
+            event, payload = message[0], message[1]
+            if event == "execution_error" and isinstance(payload, dict):
+                detail = payload.get("exception_message") or payload.get("exception_type")
+                node_id = payload.get("node_id")
+                if detail and node_id:
+                    return f"node {node_id}: {detail}"
+                if detail:
+                    return str(detail)
+        return "workflow execution failed"
+
+    for message in status.get("messages") or []:
+        if not isinstance(message, (list, tuple)) or len(message) < 2:
+            continue
+        event, payload = message[0], message[1]
+        if event == "execution_error":
+            if isinstance(payload, dict):
+                detail = payload.get("exception_message") or payload.get("exception_type")
+                node_id = payload.get("node_id")
+                if detail and node_id:
+                    return f"node {node_id}: {detail}"
+                if detail:
+                    return str(detail)
+            return "workflow execution failed"
+
+    if status.get("completed") and status_str not in (None, "success"):
+        return f"workflow finished with status {status_str!r}"
+
+    outputs = entry.get("outputs") or {}
+    has_images = any(
+        (node_output.get("images") or [])
+        for node_output in outputs.values()
+    )
+    if status.get("completed") and not has_images:
+        return "workflow completed without output images"
+
+    return None
+
+
+def _find_output_image(entry: dict) -> dict | None:
+    for node_output in (entry.get("outputs") or {}).values():
+        images = node_output.get("images") or []
+        if images:
+            return images[0]
+    return None
+
+
+def wait_for_image(base_url: str, prompt_id: str, timeout: float = TIMEOUT) -> dict:
+    """Poll history until an output image is ready. Returns the image entry dict."""
     url = f"{base_url.rstrip('/')}/history/{prompt_id}"
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -142,19 +200,28 @@ def wait_for_image(base_url: str, prompt_id: str, timeout: float = TIMEOUT) -> s
         resp.raise_for_status()
         history = resp.json()
         if prompt_id in history:
-            outputs = history[prompt_id].get("outputs", {})
-            for node_output in outputs.values():
-                images = node_output.get("images") or []
-                if images:
-                    return images[0]["filename"]
+            entry = history[prompt_id]
+            error = _extract_history_error(entry, prompt_id)
+            if error:
+                raise RuntimeError(f"ComfyUI workflow failed (prompt_id={prompt_id}): {error}")
+
+            image = _find_output_image(entry)
+            if image is not None:
+                return image
         time.sleep(POLL_INTERVAL)
     raise TimeoutError(f"ComfyUI timed out after {timeout}s (prompt_id={prompt_id})")
 
 
-def download_image(base_url: str, filename: str) -> bytes:
+def download_image(
+    base_url: str,
+    filename: str,
+    *,
+    subfolder: str = "",
+    image_type: str = "output",
+) -> bytes:
     resp = httpx.get(
         f"{base_url.rstrip('/')}/view",
-        params={"filename": filename, "subfolder": "", "type": "output"},
+        params={"filename": filename, "subfolder": subfolder, "type": image_type},
         timeout=30,
     )
     resp.raise_for_status()
@@ -202,8 +269,13 @@ def generate_one(
         seed=seed,
     )
     prompt_id = submit_workflow(base_url, workflow)
-    filename = wait_for_image(base_url, prompt_id)
-    png = download_image(base_url, filename)
+    image = wait_for_image(base_url, prompt_id)
+    png = download_image(
+        base_url,
+        image["filename"],
+        subfolder=image.get("subfolder", ""),
+        image_type=image.get("type", "output"),
+    )
     THUMB_DIR.mkdir(parents=True, exist_ok=True)
     out_path.write_bytes(png)
     print(f"[ok]  {tid} -> {out_path} ({len(png)} bytes)")
