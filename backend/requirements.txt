@@ -10,3 +10,11 @@ mediapipe==0.10.18
 numpy==1.26.4
 opencv-python-headless>=4.10.0
 pytest==8.3.3
+# Database
+aiosqlite==0.20.0
+sqlalchemy[asyncio]==2.0.35
+greenlet==3.1.0
+alembic==1.13.0
+# Auth
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0

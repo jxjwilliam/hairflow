@@ -1,12 +1,28 @@
+import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.routers import generation, templates, comfyui_generation
+from app.database import init_db
+from app.routers import generation, templates, comfyui_generation, auth, payment
 
-app = FastAPI(title="Hairstyle MVP API", version="0.1.0")
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifecycle: initialize services on startup, cleanup on shutdown."""
+    logger.info("Starting up — initializing database...")
+    await init_db()
+    logger.info("Database initialized")
+    yield
+    logger.info("Shutting down")
+
+
+app = FastAPI(title="Hairstyle MVP API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,6 +34,8 @@ app.add_middleware(
 app.include_router(templates.router)
 app.include_router(generation.router)
 app.include_router(comfyui_generation.router)
+app.include_router(auth.router)
+app.include_router(payment.router)
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
