@@ -1,0 +1,86 @@
+{
+  "_meta": {
+    "title": "PhotoMaker Hairstyle Transfer — Base Workflow",
+    "description": "Hairstyle try-on using PhotoMaker v1 + SD1.5. Load this in ComfyUI, swap the input image and edit the prompt for different hairstyles. This is the exact same workflow the backend API sends to ComfyUI."
+  },
+  "1": {
+    "inputs": {
+      "image": "example.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {"title": "① Upload Your Photo"}
+  },
+  "2": {
+    "inputs": {
+      "ckpt_name": "photon_v1.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {"title": "② SD1.5 Checkpoint (photon_v1 / realisticVision)"}
+  },
+  "3": {
+    "inputs": {
+      "photomaker_model_name": "photomaker-v1.bin"
+    },
+    "class_type": "PhotoMakerLoader",
+    "_meta": {"title": "③ PhotoMaker v1 Model"}
+  },
+  "4": {
+    "inputs": {
+      "photomaker": ["3", 0],
+      "image": ["1", 0],
+      "clip": ["2", 1],
+      "text": "photograph of a woman with long wavy French wave hairstyle, soft romantic curls, elegant feminine look, glossy flowing hair, professional photography, portrait, Asian woman, img"
+    },
+    "class_type": "PhotoMakerEncode",
+    "_meta": {"title": "④ Identity + Hairstyle Prompt ✏️ EDIT THIS"}
+  },
+  "5": {
+    "inputs": {
+      "text": "ugly, deformed, bad anatomy, blurry, low quality, disfigured, extra fingers, mutated hands, short hair, straight hair, messy hair, wig, hat",
+      "clip": ["2", 1]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "⑤ Negative Prompt"}
+  },
+  "6": {
+    "inputs": {
+      "width": 512,
+      "height": 768,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {"title": "⑥ Output Size (512×768)"}
+  },
+  "7": {
+    "inputs": {
+      "seed": 42,
+      "steps": 25,
+      "cfg": 6.5,
+      "sampler_name": "euler_ancestral",
+      "scheduler": "normal",
+      "denoise": 0.85,
+      "model": ["2", 0],
+      "positive": ["4", 0],
+      "negative": ["5", 0],
+      "latent_image": ["6", 0]
+    },
+    "class_type": "KSampler",
+    "_meta": {"title": "⑦ Sampler (steps=25, cfg=6.5, denoise=0.85)"}
+  },
+  "8": {
+    "inputs": {
+      "samples": ["7", 0],
+      "vae": ["2", 2]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {"title": "⑧ Decode Image"}
+  },
+  "9": {
+    "inputs": {
+      "filename_prefix": "hairstyle_result",
+      "images": ["8", 0]
+    },
+    "class_type": "SaveImage",
+    "_meta": {"title": "⑨ Save Result"}
+  }
+}
