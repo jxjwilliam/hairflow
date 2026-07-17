@@ -6,3 +6,6 @@ python-multipart==0.0.12
 oss2==2.18.0
 pydantic-settings==2.5.0
 python-dotenv==1.0.0
+mediapipe==0.10.18
+numpy==1.26.4
+opencv-python-headless>=4.10.0

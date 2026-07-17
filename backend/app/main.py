@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import generation, templates
+from app.routers import generation, templates, comfyui_generation
 
 app = FastAPI(title="Hairstyle MVP API", version="0.1.0")
 
@@ -13,6 +13,7 @@ app.add_middleware(
 
 app.include_router(templates.router)
 app.include_router(generation.router)
+app.include_router(comfyui_generation.router)
 
 
 @app.get("/")
