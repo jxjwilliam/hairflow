@@ -60,8 +60,8 @@ async def main():
         print("\n   *** No checkpoints found! Restart ComfyUI in Pinokio. ***")
         return
     if not pm_list:
-        print("\n   *** No PhotoMaker model found! Download photomaker-v2.bin and restart ComfyUI. ***")
-        return
+        print("\n   *** WARNING: PhotoMaker model not listed in object_info. ***")
+        print("   Will try submitting anyway — ComfyUI may find it at runtime.")
 
     # --- Step 2: Load test photo ---
     print("\n3. Loading test photo...")

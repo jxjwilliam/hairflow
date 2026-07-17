@@ -1,122 +1,17 @@
 [
-  {
-    "id": "m1", "name": "清爽短发", "category": "men", "tags": ["短发", "清爽", "商务"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Short", "description": "干净利落的短发造型",
-    "positive_prompt": "photograph of a man with short neat haircut, clean buzz cut, sharp fade on sides, professional look, studio lighting, portrait, detailed hair texture, Asian man",
-    "negative_prompt": "long hair, messy hair, wig, hat, sunglasses, blurry, low quality, deformed",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.8
-  },
-  {
-    "id": "m2", "name": "纹理碎发", "category": "men", "tags": ["短发", "纹理", "休闲"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Texture", "description": "有层次感的碎发效果",
-    "positive_prompt": "photograph of a man with textured messy crop haircut, layered choppy top, casual style, soft natural lighting, portrait, detailed hair, Asian man",
-    "negative_prompt": "long hair, bald, wig, hat, blurry, low quality, deformed",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.8
-  },
-  {
-    "id": "m3", "name": "韩式微分", "category": "men", "tags": ["中发", "韩式", "时尚"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Korean", "description": "韩系微分发型",
-    "positive_prompt": "photograph of a man with Korean style two-block haircut, soft parted bangs, slightly wavy medium length top, Korean drama actor style, studio lighting, portrait, Asian man",
-    "negative_prompt": "long hair, bald, messy unkempt hair, hat, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.8
-  },
-  {
-    "id": "m4", "name": "美式寸头", "category": "men", "tags": ["超短", "硬朗", "美式"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Buzz", "description": "硬朗寸头",
-    "positive_prompt": "photograph of a man with military buzz cut, very short hair, high fade, masculine sharp look, studio lighting, portrait, Asian man",
-    "negative_prompt": "long hair, messy hair, wig, hat, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.75
-  },
-  {
-    "id": "m5", "name": "复古油头", "category": "men", "tags": ["短发", "复古", "绅士"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Pompadour", "description": "经典复古油头",
-    "positive_prompt": "photograph of a man with classic pompadour slicked back hairstyle, vintage gentleman style, shiny groomed hair, barbershop look, studio lighting, portrait, Asian man",
-    "negative_prompt": "messy hair, long hair, hat, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.8
-  },
-  {
-    "id": "m6", "name": "侧分纹理", "category": "men", "tags": ["中发", "纹理", "成熟"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=SidePart", "description": "成熟侧分纹理",
-    "positive_prompt": "photograph of a man with side parted textured hairstyle, mature professional look, medium length swept back, natural volume, studio lighting, portrait, Asian man",
-    "negative_prompt": "messy hair, long hair, bald, hat, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.8
-  },
-  {
-    "id": "m7", "name": "飞机头", "category": "men", "tags": ["超短", "个性", "潮流"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Spike", "description": "个性飞机头",
-    "positive_prompt": "photograph of a man with spiky faux hawk hairstyle, trendy youthful style, textured spiked top, short sides, street fashion, studio lighting, portrait, Asian man",
-    "negative_prompt": "long hair, flat hair, bald, hat, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.8
-  },
-  {
-    "id": "w1", "name": "法式大波浪", "category": "women", "tags": ["长发", "卷发", "优雅"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Wave", "description": "浪漫法式大波浪",
-    "positive_prompt": "photograph of a woman with long wavy French wave hairstyle, soft romantic curls, elegant feminine look, glossy flowing hair, professional photography, portrait, detailed hair texture, Asian woman",
-    "negative_prompt": "short hair, straight hair, messy hair, wig, hat, blurry, low quality, deformed",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.85
-  },
-  {
-    "id": "w2", "name": "及肩锁骨发", "category": "women", "tags": ["中发", "直发", "知性"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Lob", "description": "优雅锁骨发",
-    "positive_prompt": "photograph of a woman with shoulder length sleek bob, collarbone length lob haircut, straight elegant hair, sophisticated look, studio lighting, portrait, detailed hair, Asian woman",
-    "negative_prompt": "long hair, curly hair, messy hair, wig, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.8
-  },
-  {
-    "id": "w3", "name": "蛋蛋卷", "category": "women", "tags": ["中发", "卷发", "可爱"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=EggRoll", "description": "俏皮蛋蛋卷发型",
-    "positive_prompt": "photograph of a woman with cute egg roll perm hairstyle, playful bouncy curls, medium length Korean style curly hair, youthful fresh look, studio lighting, portrait, Asian woman",
-    "negative_prompt": "straight hair, long hair, messy hair, wig, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.85
-  },
-  {
-    "id": "w4", "name": "公主切", "category": "women", "tags": ["长发", "直发", "个性"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Princess", "description": "二次元感公主切",
-    "positive_prompt": "photograph of a woman with hime cut princess hairstyle, straight long hair with short cheek length side bangs, Japanese anime inspired style, sharp clean lines, studio lighting, portrait, Asian woman",
-    "negative_prompt": "curly hair, messy hair, wig, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.85
-  },
-  {
-    "id": "w5", "name": "黑长直", "category": "women", "tags": ["长发", "直发", "经典"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=LongStraight", "description": "经典黑长直",
-    "positive_prompt": "photograph of a woman with classic long straight black hair, sleek shiny flowing hair, natural elegant Asian beauty, professional photography, portrait, detailed hair texture, Asian woman",
-    "negative_prompt": "curly hair, short hair, messy hair, wig, hat, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.8
-  },
-  {
-    "id": "w6", "name": "羊毛卷", "category": "women", "tags": ["中发", "卷发", "复古"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Wool", "description": "蓬松羊毛卷",
-    "positive_prompt": "photograph of a woman with wool perm hairstyle, voluminous tight curls, fluffy textured medium length hair, retro vintage vibe, studio lighting, portrait, detailed curly hair, Asian woman",
-    "negative_prompt": "straight hair, flat hair, messy hair, wig, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.85
-  },
-  {
-    "id": "w7", "name": "波波头", "category": "women", "tags": ["短发", "直发", "干练"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=Bob", "description": "经典波波头",
-    "positive_prompt": "photograph of a woman with classic bob haircut, chin length blunt cut, sleek straight bob, modern professional look, studio lighting, portrait, Asian woman",
-    "negative_prompt": "long hair, curly hair, messy hair, wig, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.8
-  },
-  {
-    "id": "w8", "name": "木马卷", "category": "women", "tags": ["长发", "卷发", "甜美"],
-    "thumbnail": "https://placehold.co/200x260/EEE/333?text=WoodHorse", "description": "甜美木马卷",
-    "positive_prompt": "photograph of a woman with wooden horse roll perm hairstyle, soft romantic spiral curls, long sweet feminine style, dreamy ethereal look, studio lighting, portrait, detailed wavy hair, Asian woman",
-    "negative_prompt": "straight hair, short hair, messy hair, wig, blurry, low quality",
-    "checkpoint": "juggernautXL_ragnarokBy.safetensors", "photomaker_model": "photomaker-v2.bin",
-    "width": 768, "height": 1024, "steps": 20, "cfg": 6.5, "denoise": 0.85
-  }
+  {"id":"m1","name":"清爽短发","category":"men","tags":["短发","清爽","商务"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Short","description":"干净利落的短发造型","positive_prompt":"photograph of a man with short neat haircut, clean buzz cut, sharp fade on sides, professional look, studio lighting, portrait, Asian man","negative_prompt":"long hair, messy hair, wig, hat, sunglasses, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.8},
+  {"id":"m2","name":"纹理碎发","category":"men","tags":["短发","纹理","休闲"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Texture","description":"有层次感的碎发效果","positive_prompt":"photograph of a man with textured messy crop haircut, layered choppy top, casual style, portrait, Asian man","negative_prompt":"long hair, bald, wig, hat, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.8},
+  {"id":"m3","name":"韩式微分","category":"men","tags":["中发","韩式","时尚"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Korean","description":"韩系微分发型","positive_prompt":"photograph of a man with Korean style two-block haircut, soft parted bangs, slightly wavy medium length top, portrait, Asian man","negative_prompt":"long hair, bald, messy hair, hat, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.8},
+  {"id":"m4","name":"美式寸头","category":"men","tags":["超短","硬朗","美式"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Buzz","description":"硬朗寸头","positive_prompt":"photograph of a man with military buzz cut, very short hair, high fade, masculine look, portrait, Asian man","negative_prompt":"long hair, messy hair, wig, hat, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.75},
+  {"id":"m5","name":"复古油头","category":"men","tags":["短发","复古","绅士"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Pompadour","description":"经典复古油头","positive_prompt":"photograph of a man with classic pompadour slicked back hairstyle, vintage gentleman style, shiny groomed hair, portrait, Asian man","negative_prompt":"messy hair, long hair, hat, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.8},
+  {"id":"m6","name":"侧分纹理","category":"men","tags":["中发","纹理","成熟"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=SidePart","description":"成熟侧分纹理","positive_prompt":"photograph of a man with side parted textured hairstyle, mature professional look, medium length swept back, portrait, Asian man","negative_prompt":"messy hair, long hair, bald, hat, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.8},
+  {"id":"m7","name":"飞机头","category":"men","tags":["超短","个性","潮流"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Spike","description":"个性飞机头","positive_prompt":"photograph of a man with spiky faux hawk hairstyle, trendy youthful style, textured spiked top, short sides, portrait, Asian man","negative_prompt":"long hair, flat hair, bald, hat, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.8},
+  {"id":"w1","name":"法式大波浪","category":"women","tags":["长发","卷发","优雅"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Wave","description":"浪漫法式大波浪","positive_prompt":"photograph of a woman with long wavy French wave hairstyle, soft romantic curls, elegant feminine look, glossy flowing hair, professional photography, portrait, Asian woman","negative_prompt":"short hair, straight hair, messy hair, wig, hat, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.85},
+  {"id":"w2","name":"及肩锁骨发","category":"women","tags":["中发","直发","知性"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Lob","description":"优雅锁骨发","positive_prompt":"photograph of a woman with shoulder length sleek bob, collarbone length lob haircut, straight elegant hair, portrait, Asian woman","negative_prompt":"long hair, curly hair, messy hair, wig, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.8},
+  {"id":"w3","name":"蛋蛋卷","category":"women","tags":["中发","卷发","可爱"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=EggRoll","description":"俏皮蛋蛋卷发型","positive_prompt":"photograph of a woman with cute egg roll perm hairstyle, playful bouncy curls, medium length Korean style curly hair, portrait, Asian woman","negative_prompt":"straight hair, long hair, messy hair, wig, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.85},
+  {"id":"w4","name":"公主切","category":"women","tags":["长发","直发","个性"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Princess","description":"二次元感公主切","positive_prompt":"photograph of a woman with hime cut princess hairstyle, straight long hair with short cheek length side bangs, Japanese anime inspired style, portrait, Asian woman","negative_prompt":"curly hair, messy hair, wig, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.85},
+  {"id":"w5","name":"黑长直","category":"women","tags":["长发","直发","经典"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=LongStraight","description":"经典黑长直","positive_prompt":"photograph of a woman with classic long straight black hair, sleek shiny flowing hair, natural elegant beauty, portrait, Asian woman","negative_prompt":"curly hair, short hair, messy hair, wig, hat, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.8},
+  {"id":"w6","name":"羊毛卷","category":"women","tags":["中发","卷发","复古"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Wool","description":"蓬松羊毛卷","positive_prompt":"photograph of a woman with wool perm hairstyle, voluminous tight curls, fluffy textured medium length hair, retro vintage vibe, portrait, Asian woman","negative_prompt":"straight hair, flat hair, messy hair, wig, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.85},
+  {"id":"w7","name":"波波头","category":"women","tags":["短发","直发","干练"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=Bob","description":"经典波波头","positive_prompt":"photograph of a woman with classic bob haircut, chin length blunt cut, sleek straight bob, modern professional look, portrait, Asian woman","negative_prompt":"long hair, curly hair, messy hair, wig, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.8},
+  {"id":"w8","name":"木马卷","category":"women","tags":["长发","卷发","甜美"],"thumbnail":"https://placehold.co/200x260/EEE/333?text=WoodHorse","description":"甜美木马卷","positive_prompt":"photograph of a woman with wooden horse roll perm hairstyle, soft romantic spiral curls, long sweet feminine style, dreamy ethereal look, portrait, Asian woman","negative_prompt":"straight hair, short hair, messy hair, wig, blurry, low quality","checkpoint":"photon_v1.safetensors","photomaker_model":"photomaker-v1.bin","width":512,"height":768,"steps":25,"cfg":6.5,"denoise":0.85}
 ]
