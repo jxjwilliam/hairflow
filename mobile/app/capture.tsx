@@ -2,29 +2,43 @@ import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import PhotoCapture from '../components/PhotoCapture';
+import { useSession } from '../context/SessionContext';
+import { colors } from '../constants/theme';
 
 export default function CaptureScreen() {
-  const { templateId } = useLocalSearchParams<{ templateId: string }>();
+  const { templateId, templateName } = useLocalSearchParams<{
+    templateId: string;
+    templateName?: string;
+  }>();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [photoBase64, setPhotoBase64] = useState<string>('');
   const router = useRouter();
+  const { setPhoto } = useSession();
 
   const handlePhotoTaken = (base64: string, uri: string) => {
-    setPhotoBase64(base64);
     setPhotoUri(uri);
+    setPhoto({ base64, uri });
     router.replace({
       pathname: '/preview',
-      params: { templateId, photoBase64: base64 },
+      params: {
+        templateId,
+        templateName: templateName ?? '',
+        photoBase64: base64,
+      },
     });
   };
 
   return (
     <View style={styles.container}>
-      <PhotoCapture photoUri={photoUri} onPhotoTaken={handlePhotoTaken} />
+      <PhotoCapture
+        photoUri={photoUri}
+        onPhotoTaken={handlePhotoTaken}
+        templateName={templateName}
+        onBack={() => router.back()}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: colors.bg },
 });

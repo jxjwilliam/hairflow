@@ -6,21 +6,26 @@ Replaces the Meitu API pipeline with local ComfyUI + PhotoMaker.
 The original POST /api/generate (Meitu-based) is preserved unchanged.
 """
 
+import base64
+import io
 import json
 import logging
+import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse
 
 from app.models.schemas import GenerateRequest, GenerateResponse
 from app.services.comfyui import comfyui_service, ComfyUIError
 from app.services.face import face_service
-from app.services.oss import get_oss_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/comfyui", tags=["comfyui-generation"])
 
 COMPYUI_TEMPLATES_PATH = Path(__file__).parent.parent.parent / "data" / "templates_comfyui.json"
+OUTPUT_DIR = Path(__file__).parent.parent.parent / "output"
+OUTPUT_DIR.mkdir(exist_ok=True)
 
 
 def _load_comfyui_templates() -> list[dict]:
@@ -29,18 +34,30 @@ def _load_comfyui_templates() -> list[dict]:
         return json.load(f)
 
 
-@router.post("/generate", response_model=GenerateResponse)
-async def comfyui_generate(req: GenerateRequest):
-    """Generate a hairstyle preview using local ComfyUI + PhotoMaker.
+def _save_locally(image_bytes: bytes, base_url: str = "http://localhost:8000") -> tuple[str, str]:
+    """Save generated image to local output/ directory. Returns (url, image_id)."""
+    image_id = uuid.uuid4().hex
+    filename = f"{image_id}.png"
+    filepath = OUTPUT_DIR / filename
+    filepath.write_bytes(image_bytes)
+    url = f"{base_url}/api/comfyui/output/{filename}"
+    logger.info("Saved locally: %s (%d bytes)", filepath, len(image_bytes))
+    return url, image_id
 
-    Flow:
-      1. Detect face via mediapipe (validate photo)
-      2. Look up template prompt
-      3. Submit PhotoMaker workflow to ComfyUI
-      4. Poll for result, download image
-      5. Upload to OSS, return URL
-    """
-    # --- Step 1: Validate template exists ---
+
+@router.get("/output/{filename}")
+async def serve_output(filename: str):
+    """Serve generated images from local output/ directory."""
+    filepath = OUTPUT_DIR / filename
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail="Image not found")
+    return FileResponse(filepath, media_type="image/png")
+
+
+@router.post("/generate", response_model=GenerateResponse)
+async def comfyui_generate(req: GenerateRequest, request: Request):
+    """Generate a hairstyle preview using local ComfyUI + PhotoMaker."""
+    # --- Step 1: Validate template ---
     templates = _load_comfyui_templates()
     template = next((t for t in templates if t["id"] == req.style_id), None)
     if not template:
@@ -63,15 +80,16 @@ async def comfyui_generate(req: GenerateRequest):
         face_result.get("bbox"),
     )
 
-    # --- Step 3: Optionally crop face for better PhotoMaker results ---
+    # --- Step 3: Optionally crop for better PhotoMaker results ---
     photo_for_generation = req.photo_base64
     cropped = await face_service.crop_face(req.photo_base64, padding=0.3)
     if cropped:
         photo_for_generation = cropped
         logger.info("Face cropped for generation")
 
-    # --- Step 4: Submit to ComfyUI ---
+    # --- Step 4: ComfyUI generation ---
     try:
+        logger.info("Submitting to ComfyUI (style=%s, checkpoint=%s)...", req.style_id, template.get("checkpoint"))
         image_bytes = await comfyui_service.generate_hairstyle(
             photo_base64=photo_for_generation,
             prompt=template["positive_prompt"],
@@ -84,23 +102,26 @@ async def comfyui_generate(req: GenerateRequest):
             cfg=template.get("cfg", 6.5),
             denoise=template.get("denoise", 0.85),
         )
+        logger.info("ComfyUI generation complete: %d bytes", len(image_bytes))
     except ComfyUIError as e:
         logger.error("ComfyUI generation failed: %s", e)
         raise HTTPException(
             status_code=502,
-            detail=f"AI generation failed: {e}. Is ComfyUI running at "
-                   f"{comfyui_service.base_url}?",
+            detail=f"AI generation failed: {e}",
         )
     except Exception as e:
-        logger.error("ComfyUI generation unexpected error: %s", e)
-        raise HTTPException(status_code=502, detail="AI generation failed")
+        logger.exception("ComfyUI generation unexpected error")
+        raise HTTPException(status_code=502, detail=f"AI generation error: {e}")
 
-    # --- Step 5: Upload to OSS ---
+    # --- Step 5: Save result (try OSS, fall back to local) ---
     try:
+        from app.services.oss import get_oss_service
         oss = get_oss_service()
         url, image_id = oss.upload_image(image_bytes, content_type="image/png")
+        logger.info("Uploaded to OSS: %s", url)
     except Exception as e:
-        logger.error("OSS upload failed: %s", e)
-        raise HTTPException(status_code=502, detail="Image storage failed")
+        logger.warning("OSS upload failed (%s), saving locally", e)
+        base_url = str(request.base_url).rstrip("/")
+        url, image_id = _save_locally(image_bytes, base_url=base_url)
 
     return GenerateResponse(image_url=url, image_id=image_id)

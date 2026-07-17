@@ -5,7 +5,7 @@ export async function generateHairstyle(
   photoBase64: string,
   styleId: string,
 ): Promise<GenerateResult> {
-  const res = await api.post('/api/generate', {
+  const res = await api.post('/api/comfyui/generate', {
     photo_base64: photoBase64,
     style_id: styleId,
   });

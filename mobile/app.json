@@ -1,31 +1,46 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "发型试戴",
+    "slug": "hairstyle",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "hairstyle",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hairstyle.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F7F3EE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.hairstyle.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "发型试戴",
+      "shortName": "发型试戴",
+      "description": "AI 虚拟发型试戴 — 上传照片，选择发型模板，本地生成效果预览",
+      "themeColor": "#1e3a5f",
+      "backgroundColor": "#F7F3EE"
     },
     "plugins": [
       "expo-router",
       "expo-image",
       "expo-sharing",
-      "expo-splash-screen"
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F7F3EE",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200
+        }
+      ]
     ]
   }
 }

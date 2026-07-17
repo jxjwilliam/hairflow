@@ -35,4 +35,4 @@ backend/alembic/versions/__pycache__/
 .codegraph/
 .obsidian/
 .claude/
-output/
+output
