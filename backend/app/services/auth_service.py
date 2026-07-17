@@ -95,7 +95,7 @@ async def login_or_register(
     user = result.scalar_one_or_none()
 
     if user is None:
-        # New user — register + grant bonus points
+        # New user — register + grant bonus points (single transaction)
         user = User(
             phone=phone,
             phone_verified=True,
@@ -103,21 +103,20 @@ async def login_or_register(
             points_balance=3,  # 新用户赠送 3 点
         )
         session.add(user)
-        await session.commit()
-        await session.refresh(user)
-        logger.info("New user registered: phone=%s id=%d", phone, user.id)
+        await session.flush()  # get user.id without committing
 
-        # Record bonus points grant
         from app.models.points_ledger import PointsLedger
         ledger = PointsLedger(
             user_id=user.id,
             amount=3,
             type="bonus",
-            balance_after=3,
+            balance_after=user.points_balance,
             description="新用户注册赠送",
         )
         session.add(ledger)
-        await session.commit()
+        await session.commit()  # single commit for user + ledger
+        await session.refresh(user)
+        logger.info("New user registered: phone=%s id=%d", phone, user.id)
     else:
         logger.info("Existing user login: phone=%s id=%d", phone, user.id)
 

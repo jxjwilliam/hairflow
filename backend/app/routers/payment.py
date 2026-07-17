@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, require_user
 from app.models.user import User
 from app.services.points_service import PACKAGES, complete_order, create_order
 
@@ -86,30 +86,23 @@ async def create_payment_order(
 async def mock_payment_notify(
     req: MockNotifyRequest,
     session: AsyncSession = Depends(get_session),
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(require_user),
 ):
     """Mock payment callback — simulates successful payment.
 
+    Requires authentication and verifies order ownership.
     In production, this would be a webhook called by WeChat/Alipay.
     For local dev, call this directly after creating an order.
     """
     order = await complete_order(session, req.order_no)
     if order is None:
         raise HTTPException(status_code=404, detail="订单不存在")
+    if order.user_id != user.id:
+        raise HTTPException(status_code=403, detail="无权操作此订单")
 
-    # Fetch updated user to get balance
-    if user:
-        await session.refresh(user)
-        balance = user.points_balance
-    else:
-        from app.models.user import User as UserModel
-        from sqlalchemy import select
-        result = await session.execute(select(UserModel).where(UserModel.id == order.user_id))
-        u = result.scalar_one_or_none()
-        balance = u.points_balance if u else 0
-
+    await session.refresh(user)
     return MockNotifyResponse(
         status=order.status,
         points_credited=order.points,
-        balance_after=balance,
+        balance_after=user.points_balance,
     )

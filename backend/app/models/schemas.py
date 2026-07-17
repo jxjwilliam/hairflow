@@ -31,7 +31,7 @@ class RegenerateParams(BaseModel):
 class RegenerateRequest(BaseModel):
     photo_base64: str
     style_id: str
-    params: RegenerateParams = RegenerateParams()
+    params: RegenerateParams = RegenerateParams()  # noqa: RUF012; immutable fields only
     steps: Optional[int] = None
     cfg: Optional[float] = None
     denoise: Optional[float] = None

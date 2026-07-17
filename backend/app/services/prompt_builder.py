@@ -50,7 +50,8 @@ def build_adjusted_prompt(
 
     style_desc = f"{length_desc} {curl_desc} {color_desc} hair"
 
-    if "img" in base_prompt:
+    # Check if the PhotoMaker trigger word "img" appears as a standalone token
+    if "img" in base_prompt.split():
         return f"{style_desc}, {base_prompt}"
 
     return f"{style_desc}, {base_prompt}, img"

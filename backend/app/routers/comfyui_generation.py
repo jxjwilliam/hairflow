@@ -211,32 +211,39 @@ async def comfyui_generate_multi(req: GenerateRequest, request: Request):
         photo_for_generation = cropped
 
     base_url = str(request.base_url).rstrip("/")
+    # Serialize ComfyUI calls to avoid GPU OOM (one SD pipeline at a time)
+    _comfyui_sem = asyncio.Semaphore(1)
 
-    async def generate_for_angle(angle: str) -> tuple[str, AngleImage]:
+    async def generate_for_angle(angle: str) -> tuple[str, AngleImage | None]:
         angle_prompt = f"{template['positive_prompt']}, {ANGLE_PROMPTS[angle]}"
-        try:
-            image_bytes = await comfyui_service.generate_hairstyle(
-                photo_base64=photo_for_generation,
-                prompt=angle_prompt,
-                negative_prompt=template.get("negative_prompt", ""),
-                checkpoint=template.get("checkpoint", "photon_v1.safetensors"),
-                photomaker_model=template.get("photomaker_model", "photomaker-v1.bin"),
-                width=template.get("width", 512),
-                height=template.get("height", 768),
-                steps=template.get("steps", 25),
-                cfg=template.get("cfg", 6.5),
-                denoise=template.get("denoise", 0.85),
-            )
-            url, image_id = _save_locally(image_bytes, base_url=base_url)
-        except ComfyUIError as e:
-            logger.error("Angle %s failed: %s", angle, e)
-            raise
+        async with _comfyui_sem:
+            try:
+                image_bytes = await comfyui_service.generate_hairstyle(
+                    photo_base64=photo_for_generation,
+                    prompt=angle_prompt,
+                    negative_prompt=template.get("negative_prompt", ""),
+                    checkpoint=template.get("checkpoint", "photon_v1.safetensors"),
+                    photomaker_model=template.get("photomaker_model", "photomaker-v1.bin"),
+                    width=template.get("width", 512),
+                    height=template.get("height", 768),
+                    steps=template.get("steps", 25),
+                    cfg=template.get("cfg", 6.5),
+                    denoise=template.get("denoise", 0.85),
+                )
+                url, image_id = _save_locally(image_bytes, base_url=base_url)
+            except ComfyUIError as e:
+                logger.error("Angle %s failed: %s", angle, e)
+                return angle, None
         return angle, AngleImage(url=url, id=image_id)
 
     tasks = [generate_for_angle(angle) for angle in ANGLES]
     results = await asyncio.gather(*tasks)
+    images = {angle: img for angle, img in results if img is not None}
+
+    if not images:
+        raise HTTPException(status_code=502, detail="所有角度生成均失败")
 
     return MultiAngleResponse(
-        images=dict(results),
+        images=images,
         template_name=template.get("name", ""),
     )
