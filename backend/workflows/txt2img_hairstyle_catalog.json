@@ -1,0 +1,70 @@
+{
+  "_meta": {
+    "title": "Txt2Img Hairstyle Catalog Thumbnail",
+    "description": "Pure text-to-image catalog portrait (no PhotoMaker, no real face). Default prompt is w1 French wave. Edit positive/negative CLIP nodes to match other templates from templates_comfyui.json. Same graph used by scripts/generate_thumbnails.py."
+  },
+  "1": {
+    "inputs": {
+      "ckpt_name": "photon_v1.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {"title": "① Checkpoint (photon_v1)"}
+  },
+  "2": {
+    "inputs": {
+      "text": "photograph of a woman with long wavy French wave hairstyle, soft romantic curls, elegant feminine look, glossy flowing hair, professional photography, portrait, detailed hair texture, Asian woman, studio lighting, neutral background",
+      "clip": ["1", 1]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "② Positive prompt ✏️ EDIT THIS"}
+  },
+  "3": {
+    "inputs": {
+      "text": "short hair, straight hair, messy hair, wig, hat, sunglasses, blurry, low quality, deformed, ugly, text, watermark",
+      "clip": ["1", 1]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "③ Negative prompt"}
+  },
+  "4": {
+    "inputs": {
+      "width": 512,
+      "height": 768,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {"title": "④ Size 512×768"}
+  },
+  "5": {
+    "inputs": {
+      "seed": 42,
+      "steps": 25,
+      "cfg": 6.5,
+      "sampler_name": "euler_ancestral",
+      "scheduler": "normal",
+      "denoise": 1.0,
+      "model": ["1", 0],
+      "positive": ["2", 0],
+      "negative": ["3", 0],
+      "latent_image": ["4", 0]
+    },
+    "class_type": "KSampler",
+    "_meta": {"title": "⑤ Sampler (denoise=1.0 txt2img)"}
+  },
+  "6": {
+    "inputs": {
+      "samples": ["5", 0],
+      "vae": ["1", 2]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {"title": "⑥ Decode"}
+  },
+  "7": {
+    "inputs": {
+      "filename_prefix": "catalog_thumb",
+      "images": ["6", 0]
+    },
+    "class_type": "SaveImage",
+    "_meta": {"title": "⑦ Save"}
+  }
+}
