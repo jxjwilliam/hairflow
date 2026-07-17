@@ -16,6 +16,7 @@ import {
   loadHistory,
   removeHistoryItem,
 } from '../../services/history';
+import { getCachedUser, fetchProfile, isLoggedIn } from '../../services/auth';
 import { useLayout } from '../../hooks/useLayout';
 import { colors, radii, spacing, THUMB_ASPECT } from '../../constants/theme';
 import FocusedScreen from '../../components/FocusedScreen';
@@ -23,6 +24,8 @@ import FocusedScreen from '../../components/FocusedScreen';
 export default function HistoryScreen() {
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [pointsBalance, setPointsBalance] = useState<number | null>(null);
   const { columns, cardWidth, gutter, horizontalPad, contentWidth } = useLayout();
   const router = useRouter();
 
@@ -44,8 +47,20 @@ export default function HistoryScreen() {
   useFocusEffect(
     useCallback(() => {
       void refresh();
+      isLoggedIn().then(setLoggedIn);
+      getCachedUser().then((u) => {
+        if (u) setPointsBalance(u.points_balance);
+      });
     }, [refresh]),
   );
+
+  const handleRecharge = () => {
+    router.push('/recharge');
+  };
+
+  const handleLogin = () => {
+    router.push('/(auth)/login');
+  };
 
   const handleClear = () => {
     Alert.alert('清空效果图？', '将删除本机保存的试戴记录（不影响服务器文件）', [
@@ -96,15 +111,36 @@ export default function HistoryScreen() {
       >
         <View>
           <Text style={styles.toolbarTitle}>我的效果</Text>
-          <Text style={styles.count}>共 {items.length} 张 · 点开可查看详情</Text>
+          <Text style={styles.count}>
+            共 {items.length} 张{loggedIn && pointsBalance !== null ? ` · ⚡ ${pointsBalance} 点` : ''}
+          </Text>
         </View>
-        <TouchableOpacity
-          onPress={handleClear}
-          accessibilityRole="button"
-          accessibilityLabel="清空全部效果图"
-        >
-          <Text style={styles.clear}>清空</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+          {loggedIn ? (
+            <TouchableOpacity
+              onPress={handleRecharge}
+              accessibilityRole="button"
+              accessibilityLabel="购买点数"
+            >
+              <Text style={styles.recharge}>充值</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={handleLogin}
+              accessibilityRole="button"
+              accessibilityLabel="登录"
+            >
+              <Text style={styles.loginBtn}>登录</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={handleClear}
+            accessibilityRole="button"
+            accessibilityLabel="清空全部效果图"
+          >
+            <Text style={styles.clear}>清空</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -216,6 +252,8 @@ const styles = StyleSheet.create({
   },
   toolbarTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
   count: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  loginBtn: { fontSize: 13, color: colors.primary, fontWeight: '600', padding: spacing.sm },
+  recharge: { fontSize: 13, color: colors.success, fontWeight: '600', padding: spacing.sm },
   clear: { fontSize: 13, color: colors.danger, fontWeight: '600', padding: spacing.sm },
   list: { paddingBottom: 40 },
   card: {

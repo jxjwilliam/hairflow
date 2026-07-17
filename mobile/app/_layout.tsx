@@ -57,6 +57,18 @@ export default function RootLayout() {
               headerBackTitle: '返回',
             }}
           />
+          <Stack.Screen
+            name="(auth)"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="recharge"
+            options={{
+              title: '购买点数',
+              presentation: 'modal',
+              headerShown: true,
+            }}
+          />
         </Stack>
       </SessionProvider>
     </QueryClientProvider>
