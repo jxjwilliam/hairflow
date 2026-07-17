@@ -157,7 +157,7 @@
     ],
     "thumbnail": "/static/thumbnails/w1.png",
     "description": "浪漫法式大波浪",
-    "positive_prompt": "photograph of a woman with long wavy French wave hairstyle, soft romantic curls, elegant feminine look, glossy flowing hair, professional photography, portrait, Asian woman",
+    "positive_prompt": "photograph of a woman with long wavy French wave hairstyle, soft romantic curls, elegant feminine look, glossy flowing hair, professional photography, close-up head and shoulders portrait, face clearly visible, hair is the focus, neutral studio background, Asian woman",
     "negative_prompt": "short hair, straight hair, messy hair, wig, hat, blurry, low quality",
     "checkpoint": "photon_v1.safetensors",
     "photomaker_model": "photomaker-v1.bin",
