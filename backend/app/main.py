@@ -1,5 +1,9 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
 from app.routers import generation, templates, comfyui_generation
 
 app = FastAPI(title="Hairstyle MVP API", version="0.1.0")
@@ -14,6 +18,11 @@ app.add_middleware(
 app.include_router(templates.router)
 app.include_router(generation.router)
 app.include_router(comfyui_generation.router)
+
+STATIC_DIR = Path(__file__).parent.parent / "static"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+(STATIC_DIR / "thumbnails").mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 @app.get("/")
