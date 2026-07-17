@@ -17,14 +17,32 @@ class GenerateRequest(BaseModel):
     style_id: str
 
 
-class RegenerateRequest(BaseModel):
-    image_id: str
-    length: Optional[float] = None
-    curl: Optional[float] = None
-    color: Optional[str] = None
-    bang_style: Optional[str] = None
-
-
 class GenerateResponse(BaseModel):
     image_url: str
     image_id: str
+
+
+class RegenerateParams(BaseModel):
+    length: float = 0.5
+    curl: float = 0.0
+    color: str = "black"
+
+
+class RegenerateRequest(BaseModel):
+    photo_base64: str
+    style_id: str
+    params: RegenerateParams = RegenerateParams()
+    steps: Optional[int] = None
+    cfg: Optional[float] = None
+    denoise: Optional[float] = None
+
+
+class AngleImage(BaseModel):
+    url: str
+    id: str
+
+
+class MultiAngleResponse(BaseModel):
+    images: dict[str, AngleImage]
+    template_name: str = ""
+
