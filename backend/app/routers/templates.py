@@ -7,6 +7,7 @@ from app.models.schemas import TemplateOut
 router = APIRouter(prefix="/api/templates", tags=["templates"])
 
 TEMPLATES_PATH = Path(__file__).parent.parent.parent / "data" / "templates_comfyui.json"
+LEGACY_TEMPLATES_PATH = Path(__file__).parent.parent.parent / "data" / "templates.json"
 
 
 def absolute_thumbnail_url(thumbnail: str, base_url: str) -> str:
@@ -16,11 +17,25 @@ def absolute_thumbnail_url(thumbnail: str, base_url: str) -> str:
     return thumbnail
 
 
+def _load_legacy_style_ids() -> dict[str, str]:
+    if not LEGACY_TEMPLATES_PATH.exists():
+        return {}
+    with open(LEGACY_TEMPLATES_PATH) as f:
+        legacy = json.load(f)
+    return {
+        t["id"]: t["style_id"]
+        for t in legacy
+        if "id" in t and "style_id" in t
+    }
+
+
 def _load_templates() -> list[dict]:
     with open(TEMPLATES_PATH) as f:
         templates = json.load(f)
+    legacy_style_ids = _load_legacy_style_ids()
     for t in templates:
-        t.setdefault("style_id", t["id"])
+        if "style_id" not in t:
+            t["style_id"] = legacy_style_ids.get(t["id"], t["id"])
     return templates
 
 
