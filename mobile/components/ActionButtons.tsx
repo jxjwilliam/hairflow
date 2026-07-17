@@ -9,12 +9,19 @@ import {
 } from 'react-native';
 import { colors, radii, spacing } from '../constants/theme';
 
+interface ActionItem {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}
+
 interface Props {
   imageUrl: string;
   onRetry?: () => void;
   onTryAnotherStyle?: () => void;
   onBackHome?: () => void;
   onRetakePhoto?: () => void;
+  extraActions?: ActionItem[];
 }
 
 function filenameFromUrl(url: string): string {
@@ -109,6 +116,7 @@ export default function ActionButtons({
   onTryAnotherStyle,
   onBackHome,
   onRetakePhoto,
+  extraActions,
 }: Props) {
   const [busy, setBusy] = useState<'save' | 'share' | null>(null);
 
@@ -169,6 +177,23 @@ export default function ActionButtons({
           </TouchableOpacity>
         )}
       </View>
+
+      {extraActions && extraActions.length > 0 && (
+        <View style={styles.row}>
+          {extraActions.map((action, idx) => (
+            <TouchableOpacity
+              key={idx}
+              style={[styles.btnGhost, action.disabled && styles.btnDisabled]}
+              onPress={action.onPress}
+              disabled={action.disabled}
+              accessibilityRole="button"
+              accessibilityLabel={action.label}
+            >
+              <Text style={styles.btnTextPrimary}>{action.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       <View style={styles.row}>
         {onTryAnotherStyle && (
