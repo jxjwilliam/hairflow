@@ -1,11 +1,23 @@
 import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { SessionProvider } from '../context/SessionContext';
 import { colors } from '../constants/theme';
 
 const queryClient = new QueryClient();
 
+function useDocumentTitle(title: string) {
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.title = title;
+    }
+  }, [title]);
+}
+
 export default function RootLayout() {
+  useDocumentTitle('发型试戴');
+
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
@@ -24,6 +36,7 @@ export default function RootLayout() {
               title: '上传照片',
               presentation: 'modal',
               headerShown: true,
+              headerBackTitle: '发型库',
             }}
           />
           <Stack.Screen

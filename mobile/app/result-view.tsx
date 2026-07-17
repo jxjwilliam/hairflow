@@ -27,8 +27,8 @@ export default function ResultViewScreen() {
       <ResultView imageUrl={imageUrl} />
       <ActionButtons
         imageUrl={imageUrl}
-        onTryAnotherStyle={() => router.replace('/(tabs)')}
-        onBackHome={() => router.replace('/(tabs)')}
+        onTryAnotherStyle={() => router.replace('/')}
+        onBackHome={() => router.replace('/')}
       />
     </ScrollView>
   );

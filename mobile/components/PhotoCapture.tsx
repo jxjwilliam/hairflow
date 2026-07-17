@@ -56,8 +56,13 @@ export default function PhotoCapture({
   return (
     <View style={styles.container}>
       {onBack && (
-        <TouchableOpacity style={styles.back} onPress={onBack} accessibilityRole="button">
-          <Text style={styles.backText}>← 返回</Text>
+        <TouchableOpacity
+          style={styles.back}
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel="返回发型库"
+        >
+          <Text style={styles.backText}>← 返回发型库</Text>
         </TouchableOpacity>
       )}
 
@@ -67,6 +72,7 @@ export default function PhotoCapture({
       ) : (
         <Text style={styles.subtitle}>请使用清晰正面照，光线均匀，头发轮廓可见</Text>
       )}
+      <Text style={styles.stepHint}>步骤 2 / 3 · 选好照片后自动进入生成</Text>
 
       {photoUri ? (
         <Image source={{ uri: photoUri }} style={[styles.preview, { width: boxW, height: boxH }]} />
@@ -85,6 +91,8 @@ export default function PhotoCapture({
         <TouchableOpacity
           style={[styles.btn, styles.btnOutline, Platform.OS === 'web' && styles.btnWebPrimary]}
           onPress={pickPhoto}
+          accessibilityRole="button"
+          accessibilityLabel="从相册选择照片"
         >
           <Text
             style={[
@@ -120,9 +128,14 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: colors.textSecondary,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.sm,
     textAlign: 'center',
     maxWidth: 320,
+  },
+  stepHint: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: spacing.xl,
   },
   preview: { borderRadius: radii.lg, marginBottom: spacing.xl },
   placeholder: {

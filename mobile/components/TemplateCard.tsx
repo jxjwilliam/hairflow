@@ -18,6 +18,9 @@ export default function TemplateCard({ template, width, onPress }: Props) {
       style={[styles.card, { width }]}
       onPress={() => onPress(template)}
       activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={`选择发型：${template.name}`}
+      accessibilityHint={template.description}
     >
       <Image
         source={{ uri: template.thumbnail }}

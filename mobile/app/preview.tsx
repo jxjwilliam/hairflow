@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { generateHairstyle } from '../services/generation';
@@ -68,7 +68,7 @@ export default function PreviewScreen() {
             onRetry={() => mutation.mutate()}
             onTryAnotherStyle={() => {
               // Keep session photo; return to catalog to pick another style
-              router.replace('/(tabs)');
+              router.replace('/');
             }}
             onRetakePhoto={() => {
               clearPhoto();
@@ -81,7 +81,7 @@ export default function PreviewScreen() {
               });
             }}
             onBackHome={() => {
-              router.replace('/(tabs)');
+              router.replace('/');
             }}
           />
         </ScrollView>
@@ -90,7 +90,23 @@ export default function PreviewScreen() {
       {!mutation.isPending && !resultUrl && mutation.isError && (
         <View style={styles.errorBox}>
           <Text style={styles.errorTitle}>生成失败</Text>
-          <Text style={styles.errorHint}>可返回发型库重选，或点击系统返回后重试</Text>
+          <Text style={styles.errorHint}>请确认后端与 ComfyUI 已启动</Text>
+          <TouchableOpacity
+            style={styles.retryBtn}
+            onPress={() => mutation.mutate()}
+            accessibilityRole="button"
+            accessibilityLabel="重新生成"
+          >
+            <Text style={styles.retryText}>重新生成</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.homeLink}
+            onPress={() => router.replace('/')}
+            accessibilityRole="button"
+            accessibilityLabel="返回发型库"
+          >
+            <Text style={styles.homeLinkText}>返回发型库</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -116,7 +132,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xl,
+    gap: spacing.sm,
   },
-  errorTitle: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: spacing.sm },
-  errorHint: { fontSize: 14, color: colors.textSecondary, textAlign: 'center' },
+  errorTitle: { fontSize: 18, fontWeight: '600', color: colors.text },
+  errorHint: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  retryBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: spacing.sm,
+  },
+  retryText: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  homeLink: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
+  homeLinkText: { color: colors.primary, fontWeight: '600', fontSize: 14 },
 });

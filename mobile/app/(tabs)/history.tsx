@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -18,12 +18,19 @@ import {
 } from '../../services/history';
 import { useLayout } from '../../hooks/useLayout';
 import { colors, radii, spacing, THUMB_ASPECT } from '../../constants/theme';
+import FocusedScreen from '../../components/FocusedScreen';
 
 export default function HistoryScreen() {
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const { columns, cardWidth, gutter, horizontalPad, contentWidth } = useLayout();
   const router = useRouter();
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = '我的效果 · 发型试戴';
+    }
+  }, []);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -56,18 +63,26 @@ export default function HistoryScreen() {
 
   if (items.length === 0) {
     return (
-      <View style={styles.empty}>
+      <FocusedScreen tab="history" style={styles.empty}>
+        <Text style={styles.emptyEmoji}>册</Text>
         <Text style={styles.emptyTitle}>还没有试戴记录</Text>
-        <Text style={styles.emptyHint}>在「发型」里选一款并生成后，效果会出现在这里，方便对比</Text>
-        <TouchableOpacity style={styles.cta} onPress={() => router.push('/(tabs)')}>
+        <Text style={styles.emptyHint}>
+          在「发型」里选一款并生成后，效果会出现在这里，方便对比不同发型
+        </Text>
+        <TouchableOpacity
+          style={styles.cta}
+          onPress={() => router.replace('/')}
+          accessibilityRole="button"
+          accessibilityLabel="去选发型"
+        >
           <Text style={styles.ctaText}>去选发型</Text>
         </TouchableOpacity>
-      </View>
+      </FocusedScreen>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <FocusedScreen tab="history" style={styles.container}>
       <View
         style={[
           styles.toolbar,
@@ -79,8 +94,15 @@ export default function HistoryScreen() {
           },
         ]}
       >
-        <Text style={styles.count}>共 {items.length} 张</Text>
-        <TouchableOpacity onPress={handleClear}>
+        <View>
+          <Text style={styles.toolbarTitle}>我的效果</Text>
+          <Text style={styles.count}>共 {items.length} 张 · 点开可查看详情</Text>
+        </View>
+        <TouchableOpacity
+          onPress={handleClear}
+          accessibilityRole="button"
+          accessibilityLabel="清空全部效果图"
+        >
           <Text style={styles.clear}>清空</Text>
         </TouchableOpacity>
       </View>
@@ -103,52 +125,55 @@ export default function HistoryScreen() {
         renderItem={({ item, index }) => {
           const isEndOfRow = (index + 1) % columns === 0;
           return (
-          <TouchableOpacity
-            style={[
-              styles.card,
-              { width: cardWidth, marginRight: isEndOfRow ? 0 : gutter, marginBottom: gutter },
-            ]}
-            onPress={() =>
-              router.push({
-                pathname: '/result-view',
-                params: {
-                  imageUrl: item.imageUrl,
-                  templateName: item.templateName,
-                },
-              })
-            }
-            onLongPress={() => {
-              Alert.alert(item.templateName, '删除这张效果图？', [
-                { text: '取消', style: 'cancel' },
-                {
-                  text: '删除',
-                  style: 'destructive',
-                  onPress: () => {
-                    void removeHistoryItem(item.id).then(setItems);
+            <TouchableOpacity
+              style={[
+                styles.card,
+                { width: cardWidth, marginRight: isEndOfRow ? 0 : gutter, marginBottom: gutter },
+              ]}
+              onPress={() =>
+                router.push({
+                  pathname: '/result-view',
+                  params: {
+                    imageUrl: item.imageUrl,
+                    templateName: item.templateName,
                   },
-                },
-              ]);
-            }}
-            activeOpacity={0.9}
-          >
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={{ width: cardWidth, height: cardWidth / THUMB_ASPECT }}
-              contentFit="cover"
-            />
-            <View style={styles.meta}>
-              <Text style={styles.name} numberOfLines={1}>
-                {item.templateName}
-              </Text>
-              <Text style={styles.time}>
-                {new Date(item.createdAt).toLocaleString()}
-              </Text>
-            </View>
-          </TouchableOpacity>
+                })
+              }
+              onLongPress={() => {
+                Alert.alert(item.templateName, '删除这张效果图？', [
+                  { text: '取消', style: 'cancel' },
+                  {
+                    text: '删除',
+                    style: 'destructive',
+                    onPress: () => {
+                      void removeHistoryItem(item.id).then(setItems);
+                    },
+                  },
+                ]);
+              }}
+              activeOpacity={0.9}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.templateName} 效果图`}
+            >
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={{ width: cardWidth, height: cardWidth / THUMB_ASPECT }}
+                contentFit="cover"
+              />
+              <View style={styles.meta}>
+                <Text style={styles.name} numberOfLines={1}>
+                  {item.templateName}
+                </Text>
+                <Text style={styles.time}>
+                  {new Date(item.createdAt).toLocaleString()}
+                </Text>
+              </View>
+            </TouchableOpacity>
           );
-        }}      />
+        }}
+      />
       <Text style={styles.hint}>长按可删除单张 · 下拉刷新</Text>
-    </View>
+    </FocusedScreen>
   );
 }
 
@@ -160,6 +185,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.xl,
     backgroundColor: colors.bg,
+  },
+  emptyEmoji: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: spacing.md,
   },
   emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: spacing.sm },
   emptyHint: {
@@ -181,10 +212,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
   },
-  count: { fontSize: 13, color: colors.textSecondary },
-  clear: { fontSize: 13, color: colors.danger, fontWeight: '600' },
+  toolbarTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+  count: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  clear: { fontSize: 13, color: colors.danger, fontWeight: '600', padding: spacing.sm },
   list: { paddingBottom: 40 },
   card: {
     backgroundColor: colors.surface,

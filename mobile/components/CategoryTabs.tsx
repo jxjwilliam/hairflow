@@ -35,6 +35,7 @@ export default function CategoryTabs({ selected, onSelect }: Props) {
               style={[styles.pill, active && styles.pillActive]}
               onPress={() => onSelect(cat.key)}
               accessibilityRole="button"
+              accessibilityLabel={`筛选${cat.label}`}
               accessibilityState={{ selected: active }}
             >
               <Text style={[styles.pillText, active && styles.pillTextActive]}>{cat.label}</Text>
