@@ -1,8 +1,9 @@
 # AI 发型试戴 App — MVP 实施计划
 
 > **版本**: v2.0  
-> **关联文档**: [spec.md](./spec.md)  
+> **关联文档**: [ds_spec.md](./ds_spec.md)  
 > **变更**: 技术栈切换为 React Native + Python FastAPI 全栈  
+> **2026-07-17 注记**: 实际 MVP 已用 **ComfyUI** 替代计划中的美图/YouCam 主对接；以 `README.md` / `AGENTS.md` 为准。  
 > **预计总工期**: 10 周（技术栈统一后比 v1.0 缩短 2 周）  
 > **建议团队**: 2-3 人（全栈 Python/TS，无 Java 依赖）
 

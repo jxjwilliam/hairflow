@@ -2,6 +2,10 @@
 
 > 2026-07-15
 > 个人开发者业余项目，验证 AI 发型生成核心价值
+>
+> **注意：** 本文档文件名含历史 `haircut` 命名；内容已部分过时。  
+> **现行实现（2026-07-17）：** 本地 ComfyUI + PhotoMaker，见根目录 `README.md` / `AGENTS.md`。  
+> 更完整的同主题文档：[`2026-07-15-hairstyle-mvp-design.md`](./2026-07-15-hairstyle-mvp-design.md)。
 
 ## 1. 产品定位
 
@@ -32,11 +36,13 @@
 
 ## 3. 技术架构
 
+> **现行实现：** Mobile → FastAPI → ComfyUI（PhotoMaker）。下图中的美图 / OSS 为历史方案。
+
 ```
-mobile/  (React Native Expo)  ──HTTP──▶  backend/  (Python FastAPI)  ──▶  美图API
+mobile/  (React Native Expo)  ──HTTP──▶  backend/  (Python FastAPI)  ──▶  ComfyUI
                                               │
                                               ▼
-                                         阿里云 OSS (图片存储)
+                                    local output/ + static/thumbnails/
 ```
 
 ### 前端 — React Native (Expo)

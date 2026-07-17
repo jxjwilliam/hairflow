@@ -2,9 +2,9 @@
 
 > **版本**: v1.0  
 > **日期**: 2026-07-17  
-> **状态**: Proposal  
+> **状态**: **Implemented**（主路径已落地；细节以 `README.md` / `AGENTS.md` / `ds_comfyui_setup.md` 为准）  
 > **背景**: Meitu API 需要付费订阅（¥6700+/年），免费 Key 无法调用 `portrait_edit`。  
-> **前提**: 你已有 LLM tokens（DeepSeek 等）、本地 ComfyUI（Pinokio）、本地 Ollama。
+> **前提**: 本地 ComfyUI（Pinokio）；可选本地 Ollama（非生成必需）。
 
 ---
 

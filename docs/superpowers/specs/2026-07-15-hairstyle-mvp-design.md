@@ -2,9 +2,12 @@
 
 > 2026-07-15
 > 个人开发者业余项目，验证 AI 发型生成核心价值
+>
+> **更新（2026-07-17）：** AI 后端已从美图 API 切换为本地 **ComfyUI + PhotoMaker**。  
+> 以仓库根目录 [`README.md`](../../../README.md)、[`AGENTS.md`](../../../AGENTS.md)、[`docs/ds_comfyui_setup.md`](../../ds_comfyui_setup.md) 为准。  
+> 下文架构图中的「美图 API」视为历史设计；当前主路径为 `POST /api/comfyui/generate`。
 
 ## 1. 产品定位
-
 面向国内理发行业的 AI 虚拟发型试戴工具，手机端（平板适配后续）。用户上传人像即可合成不同发型效果预览，辅助理发决策。
 
 ## 2. MVP 范围
@@ -32,13 +35,15 @@
 
 ## 3. 技术架构
 
+> **现行实现（2026-07-17）：** Mobile → FastAPI → **ComfyUI :8188**；结果落盘 `backend/output/`；缩略图 `backend/static/thumbnails/`。美图 / OSS 为遗留可选。
+
 ```
-mobile/  (React Native Expo)  ──HTTP──▶  backend/  (Python FastAPI)  ──▶  美图API
+mobile/  (React Native Expo)  ──HTTP──▶  backend/  (Python FastAPI)  ──▶  ComfyUI (PhotoMaker)
                                               │
                                               ▼
-                                         阿里云 OSS (图片存储)
+                                    local output/ + static/thumbnails/
+                                    (可选：阿里云 OSS / 遗留美图 API)
 ```
-
 ### 前端 — React Native (Expo)
 
 **技术栈：**

@@ -4,8 +4,10 @@
 | docs/ds_spec.md | deepseek | DeepSeek | completed | — | — |
 | docs/ds_plan.md | deepseek | DeepSeek | completed | — | — |
 | docs/ds_workflow.md | deepseek | DeepSeek | completed | — | — |
-| docs/ds_comfyui_proposal.md | deepseek | DeepSeek | completed | 2026-07-17 | — |
-| docs/ds_comfyui_setup.md | deepseek | DeepSeek | completed | 2026-07-17 | — |
+| docs/ds_comfyui_proposal.md | deepseek | DeepSeek | completed | 2026-07-17 | Implemented (status note 2026-07-17) |
+| docs/ds_comfyui_setup.md | deepseek / cursor | DeepSeek / Cursor | completed | 2026-07-17 | Synced as primary API path |
+| README.md | cursor | Cursor | completed | 2026-07-17 | ComfyUI-first rewrite |
+| AGENTS.md | cursor | Cursor | completed | 2026-07-17 | ComfyUI-first rewrite |
 | docs/OWNERS.md | deepseek | DeepSeek | completed | — | — |
 | backend/app/services/comfyui.py | deepseek | DeepSeek | completed | 2026-07-17 | — |
 | backend/app/services/face.py | deepseek | DeepSeek | completed | 2026-07-17 | — |

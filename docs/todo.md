@@ -74,25 +74,23 @@
 申请时间：2026-07-17 00:48:25
 ```
 
-## 当前状态（2026-07-16）
+## 当前状态（2026-07-17）
 
-### 问题
-`POST /api/generate` 返回 502 Bad Gateway，美图 API 报 `[90002] GATEWAY_AUTHORIZED_ERROR`
+### 已切换：本地 ComfyUI（主路径）
 
-### 已做的代码修复
-1. **`backend/app/services/meitu.py`**: `generate_hairstyle()` 和 `regenerate_hairstyle()` 支持传入 `mask_base64`，构建带遮罩的 `media_info_list`
-2. **`backend/app/routers/generation.py`**: 增加模板查找（`req.style_id` → `template["style_id"]`）和头发分割步骤
+因美图 `portrait_edit` 无权限（`GATEWAY_AUTHORIZED_ERROR`），生成链路已切到本机 **ComfyUI + PhotoMaker v1**：
 
-### 根因（代码修复无法解决）
-美图 API Key 没有 `portrait_edit`（百变发型）接口的付费权限，返回 `GATEWAY_AUTHORIZED_ERROR`。
-- `hairclassifier` 接口也返回 `Empty media_data`，说明免费 Key 权限受限
-- `hair_segment` 接口连接异常
-- `portrait_edit` 明确返回 `[90002] GATEWAY_AUTHORIZED_ERROR`
+| 项 | 现状 |
+|----|------|
+| App 生成 API | `POST /api/comfyui/generate` |
+| 模板数据 | `backend/data/templates_comfyui.json` |
+| 人脸检测 | MediaPipe（本地） |
+| 结果存储 | `backend/output/`（开发） |
+| 模板缩略图 | `backend/static/thumbnails/` + `scripts/generate_thumbnails.py` |
+| 美图 `/api/generate` | 代码保留，前端未使用 |
 
-### 解决路径
-需要联系美图开放平台购买 `portrait_edit` 接口访问权限：
-1. 完成企业实名认证
-2. 接入申请中仅保留 Android / iOS / HTML5 / 小程序平台
-3. 应用类型仅勾选「工具」，不勾选「广告」
-4. 推荐按量计费（充值 8000 元余额），不推荐包年 6700 元/10 万次
-5. 确保 API 请求从国内阿里云 ECS 发出，海外 IP 直连会被拦截
+详见：`README.md`、`docs/ds_comfyui_setup.md`、`docs/ds_comfyui_proposal.md`。
+
+### 历史问题（2026-07-16，已绕过）
+
+`POST /api/generate` 曾返回 502，美图报 `[90002] GATEWAY_AUTHORIZED_ERROR`。根因是 Key 无 `portrait_edit` 付费权限；若要恢复美图路径，需企业认证并购买接口权限（国内 IP / ECS 出网）。

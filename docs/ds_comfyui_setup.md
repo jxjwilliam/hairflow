@@ -111,12 +111,25 @@ python3 scripts/test_comfyui.py --photo ~/Desktop/my_face.jpg --style w1
 
 ---
 
-## 6. 后端 API
+## 6. 后端 API（主路径）
+
+App 前端（`mobile/services/generation.ts`）只调用 ComfyUI 路径：
 
 ```
 POST /api/comfyui/generate
-{"photo_base64": "...", "style_id": "w1"}
-→ {"image_url": "...", "image_id": "..."}
+{"photo_base64": "...", "style_id": "w1"}   # style_id = 模板 id（m1/w1…），不是 meitu_style_*
+→ {"image_url": "http://…/api/comfyui/output/{uuid}.png", "image_id": "..."}
 ```
 
-`/api/generate` (Meitu) 保持不变。
+模板列表来自 `data/templates_comfyui.json`，缩略图经 `/static/thumbnails/` 提供。
+
+遗留：`POST /api/generate`（Meitu）仍在代码中，**前端未接入**。美图 Key 无 `portrait_edit` 权限时不可用。
+
+Catalog 缩略图批生成（txt2img，无 PhotoMaker）：
+
+```bash
+python3 scripts/generate_thumbnails.py
+python3 scripts/generate_thumbnails.py --id m1 --force --seed 42
+```
+
+Workflow 说明见 `backend/workflows/README.md`。
