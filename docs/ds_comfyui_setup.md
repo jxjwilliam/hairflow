@@ -133,3 +133,27 @@ python3 scripts/generate_thumbnails.py --id m1 --force --seed 42
 ```
 
 Workflow 说明见 `backend/workflows/README.md`。
+
+---
+
+## 7. FLUX 管线（可选，2026-07-17 新增）
+
+除 PhotoMaker 外，后端还支持 3 条 GGUF 管线（前端「生成选项」可选）：
+
+| pipeline | 模型文件（ComfyUI `models/` 下） | 说明 |
+|----------|------|------|
+| `sd15` | `realisticVisionV60B1_v60B1VAE.safetensors`（checkpoints） | SD1.5 真实风格 |
+| `flux` | `flux1-schnell-Q8_0.gguf`（unet）+ `clip_l.safetensors` + `t5xxl_fp16.safetensors`（clip）+ `ae.safetensors`（vae） | FLUX.1 Schnell，最快 |
+| `flux_klein` | `flux-2-klein-4b-Q8_0.gguf`（unet）+ `qwen_3_4b.safetensors`（text_encoders）+ `flux2-vae.safetensors`（vae） | FLUX.2 Klein 4B，细节最好 |
+
+**前置**：GGUF 加载需要 [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF) 自定义节点（`UnetLoaderGGUF` / `DualCLIPLoaderGGUF`）。
+
+**flux_klein 要点**：
+
+- img2img 走**官方原生编辑工作流**（ReferenceLatent 注入自拍参考），保留自拍者脸部特征，只换发型；详见 `docs/oc_flux2_klein_integration.md`。
+- 蒸馏模型：`cfg=1.0`、`euler`、**steps=4**（前端已默认）；步数过多会"烤糊"。
+- 文本编码器是 `qwen_3_4b.safetensors`（~8GB），**不是** clip_l/t5xxl；VAE 是 `flux2-vae.safetensors`，**不能**用 FLUX.1 的 `ae.safetensors`。
+
+> ⚠️ **Pinokio 共享盘坑**：模型下载到 Pinokio 共享盘（`drive/drives/peers/<id>/text_encoders/`）时 ComfyUI 扫不到——`extra_model_paths.yaml` 的 `pinokio_drive` 段只映射 `clip:` 未映射 `text_encoders:`。把文件放进 ComfyUI 应用自己的 `models/text_encoders/` 即可（无需重启即被扫描）。
+
+**排错**：后端会把 ComfyUI 的 400 校验详情透传到 502 响应（如 `clip_name2: 'qwen_3_4b.safetensors' not in [...]`），按提示补齐模型文件即可。
