@@ -292,3 +292,18 @@ python scripts/generate_thumbnails.py --id m1 --force --seed 42
 ## License
 
 MIT
+
+<!-- screenshots -->
+| Home | History | Login |
+| --- | --- | --- |
+| ![Home](screenshots/home.png) | ![History](screenshots/history.png) | ![Login](screenshots/login.png) |
+
+| Capture | Options | Preview |
+| --- | --- | --- |
+| ![Capture](screenshots/capture.png) | ![Options](screenshots/options.png) | ![Preview](screenshots/preview.png) |
+
+| Result View | Recharge | Membership |
+| --- | --- | --- |
+| ![Result View](screenshots/result-view.png) | ![Recharge](screenshots/recharge.png) | ![Membership](screenshots/membership.png) |
+
+<!-- /screenshots -->

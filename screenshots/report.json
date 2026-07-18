@@ -1,0 +1,49 @@
+{
+  "localhost": [
+    {
+      "name": "home",
+      "file": "screenshots/home.png",
+      "status": "ok"
+    },
+    {
+      "name": "history",
+      "file": "screenshots/history.png",
+      "status": "ok"
+    },
+    {
+      "name": "login",
+      "file": "screenshots/login.png",
+      "status": "ok"
+    },
+    {
+      "name": "capture",
+      "file": "screenshots/capture.png",
+      "status": "ok"
+    },
+    {
+      "name": "options",
+      "file": "screenshots/options.png",
+      "status": "ok"
+    },
+    {
+      "name": "preview",
+      "file": "screenshots/preview.png",
+      "status": "ok"
+    },
+    {
+      "name": "result-view",
+      "file": "screenshots/result-view.png",
+      "status": "ok"
+    },
+    {
+      "name": "recharge",
+      "file": "screenshots/recharge.png",
+      "status": "ok"
+    },
+    {
+      "name": "membership",
+      "file": "screenshots/membership.png",
+      "status": "ok"
+    }
+  ]
+}
