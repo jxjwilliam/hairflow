@@ -69,6 +69,14 @@ export default function RootLayout() {
               headerShown: true,
             }}
           />
+          <Stack.Screen
+            name="membership"
+            options={{
+              title: '会员中心',
+              presentation: 'modal',
+              headerShown: true,
+            }}
+          />
         </Stack>
       </SessionProvider>
     </QueryClientProvider>

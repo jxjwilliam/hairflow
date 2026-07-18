@@ -6,9 +6,13 @@ import logging
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
+from app.database import get_session
+from app.dependencies import get_current_user
 from app.models.schemas import (
     GenerateRequest,
     GenerateResponse,
@@ -16,8 +20,10 @@ from app.models.schemas import (
     MultiAngleResponse,
     AngleImage,
 )
+from app.models.user import User
 from app.services.comfyui import comfyui_service, ComfyUIError
 from app.services.face import face_service
+from app.services.membership_service import membership_service
 from app.services.prompt_builder import build_adjusted_prompt
 
 logger = logging.getLogger(__name__)
@@ -55,7 +61,12 @@ async def serve_output(filename: str):
 
 
 @router.post("/generate", response_model=GenerateResponse)
-async def comfyui_generate(req: GenerateRequest, request: Request):
+async def comfyui_generate(
+    req: GenerateRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    user: User | None = Depends(get_current_user),
+):
     """Generate a hairstyle preview using local ComfyUI + PhotoMaker."""
     # --- Step 1: Validate template ---
     templates = _load_comfyui_templates()
@@ -67,7 +78,16 @@ async def comfyui_generate(req: GenerateRequest, request: Request):
                     f"Available: {[t['id'] for t in templates]}",
         )
 
-    # --- Step 2: Face detection ---
+    # --- Step 2: Membership quota check (skip in dev with skip_points_check) ---
+    if not settings.skip_points_check and user is not None:
+        quota_ok = await membership_service.check_generation_quota(user)
+        if not quota_ok:
+            raise HTTPException(
+                status_code=403,
+                detail="已达每日生成上限，升级会员可增加次数",
+            )
+
+    # --- Step 3: Face detection ---
     face_result = await face_service.detect_face(req.photo_base64)
     if not face_result["face_detected"]:
         raise HTTPException(
@@ -80,14 +100,14 @@ async def comfyui_generate(req: GenerateRequest, request: Request):
         face_result.get("bbox"),
     )
 
-    # --- Step 3: Optionally crop for better PhotoMaker results ---
+    # --- Step 4: Optionally crop for better PhotoMaker results ---
     photo_for_generation = req.photo_base64
     cropped = await face_service.crop_face(req.photo_base64, padding=0.3)
     if cropped:
         photo_for_generation = cropped
         logger.info("Face cropped for generation")
 
-    # --- Step 4: ComfyUI generation ---
+    # --- Step 5: ComfyUI generation ---
     try:
         logger.info("Submitting to ComfyUI (style=%s, checkpoint=%s)...", req.style_id, template.get("checkpoint"))
         image_bytes = await comfyui_service.generate_hairstyle(
@@ -113,7 +133,7 @@ async def comfyui_generate(req: GenerateRequest, request: Request):
         logger.exception("ComfyUI generation unexpected error")
         raise HTTPException(status_code=502, detail=f"AI generation error: {e}")
 
-    # --- Step 5: Save result (try OSS, fall back to local) ---
+    # --- Step 6: Save result (try OSS, fall back to local) ---
     try:
         from app.services.oss import get_oss_service
         oss = get_oss_service()
@@ -124,11 +144,20 @@ async def comfyui_generate(req: GenerateRequest, request: Request):
         base_url = str(request.base_url).rstrip("/")
         url, image_id = _save_locally(image_bytes, base_url=base_url)
 
+    # --- Step 7: Record generation for quota ---
+    if not settings.skip_points_check and user is not None:
+        await membership_service.record_generation(session, user)
+
     return GenerateResponse(image_url=url, image_id=image_id)
 
 
 @router.post("/regenerate", response_model=GenerateResponse)
-async def comfyui_regenerate(req: RegenerateRequest, request: Request):
+async def comfyui_regenerate(
+    req: RegenerateRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    user: User | None = Depends(get_current_user),
+):
     templates = _load_comfyui_templates()
     template = next((t for t in templates if t["id"] == req.style_id), None)
     if not template:
@@ -136,6 +165,15 @@ async def comfyui_regenerate(req: RegenerateRequest, request: Request):
             status_code=404,
             detail=f"Hairstyle template '{req.style_id}' not found.",
         )
+
+    # Membership quota check
+    if not settings.skip_points_check and user is not None:
+        quota_ok = await membership_service.check_generation_quota(user)
+        if not quota_ok:
+            raise HTTPException(
+                status_code=403,
+                detail="已达每日生成上限，升级会员可增加次数",
+            )
 
     adjusted_prompt = build_adjusted_prompt(
         base_prompt=template["positive_prompt"],
@@ -182,6 +220,9 @@ async def comfyui_regenerate(req: RegenerateRequest, request: Request):
         base_url = str(request.base_url).rstrip("/")
         url, image_id = _save_locally(image_bytes, base_url=base_url)
 
+    if not settings.skip_points_check and user is not None:
+        await membership_service.record_generation(session, user)
+
     return GenerateResponse(image_url=url, image_id=image_id)
 
 
@@ -195,11 +236,25 @@ ANGLE_PROMPTS = {
 
 
 @router.post("/generate-multi", response_model=MultiAngleResponse)
-async def comfyui_generate_multi(req: GenerateRequest, request: Request):
+async def comfyui_generate_multi(
+    req: GenerateRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    user: User | None = Depends(get_current_user),
+):
     templates = _load_comfyui_templates()
     template = next((t for t in templates if t["id"] == req.style_id), None)
     if not template:
         raise HTTPException(status_code=404, detail=f"Template '{req.style_id}' not found.")
+
+    # Membership quota check (multi-angle counts as 1 generation)
+    if not settings.skip_points_check and user is not None:
+        quota_ok = await membership_service.check_generation_quota(user)
+        if not quota_ok:
+            raise HTTPException(
+                status_code=403,
+                detail="已达每日生成上限，升级会员可增加次数",
+            )
 
     face_result = await face_service.detect_face(req.photo_base64)
     if not face_result["face_detected"]:
@@ -242,6 +297,9 @@ async def comfyui_generate_multi(req: GenerateRequest, request: Request):
 
     if not images:
         raise HTTPException(status_code=502, detail="所有角度生成均失败")
+
+    if not settings.skip_points_check and user is not None:
+        await membership_service.record_generation(session, user)
 
     return MultiAngleResponse(
         images=images,

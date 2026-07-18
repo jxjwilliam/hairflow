@@ -1,4 +1,4 @@
-"""User model — stores auth identities and points balance."""
+"""User model — stores auth identities, points balance, and membership."""
 
 from datetime import datetime
 
@@ -23,6 +23,16 @@ class User(Base):
 
     points_balance: Mapped[int] = mapped_column(Integer, default=0)
 
+    # ── Membership fields ────────────────────────────────────────────
+    membership_tier: Mapped[str] = mapped_column(String(16), default="free")  # free / pro / premium
+    membership_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    daily_generations: Mapped[int] = mapped_column(Integer, default=0)
+    daily_generations_date: Mapped[str | None] = mapped_column(
+        String(10), nullable=True, default=None
+    )  # "2026-07-17"
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -31,4 +41,5 @@ class User(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<User id={self.id} phone={self.phone}>"
+        tier = self.membership_tier
+        return f"<User id={self.id} phone={self.phone} tier={tier}>"

@@ -117,13 +117,22 @@ export default function HistoryScreen() {
         </View>
         <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
           {loggedIn ? (
-            <TouchableOpacity
-              onPress={handleRecharge}
-              accessibilityRole="button"
-              accessibilityLabel="购买点数"
-            >
-              <Text style={styles.recharge}>充值</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+              <TouchableOpacity
+                onPress={() => router.push('/membership')}
+                accessibilityRole="button"
+                accessibilityLabel="会员中心"
+              >
+                <Text style={styles.membershipBtn}>会员</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleRecharge}
+                accessibilityRole="button"
+                accessibilityLabel="购买点数"
+              >
+                <Text style={styles.recharge}>充值</Text>
+              </TouchableOpacity>
+            </View>
           ) : (
             <TouchableOpacity
               onPress={handleLogin}
@@ -253,6 +262,7 @@ const styles = StyleSheet.create({
   toolbarTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
   count: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   loginBtn: { fontSize: 13, color: colors.primary, fontWeight: '600', padding: spacing.sm },
+  membershipBtn: { fontSize: 13, color: colors.tierPro, fontWeight: '600', padding: spacing.sm },
   recharge: { fontSize: 13, color: colors.success, fontWeight: '600', padding: spacing.sm },
   clear: { fontSize: 13, color: colors.danger, fontWeight: '600', padding: spacing.sm },
   list: { paddingBottom: 40 },

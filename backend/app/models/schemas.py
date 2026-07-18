@@ -7,6 +7,7 @@ class TemplateOut(BaseModel):
     name: str
     category: str
     tags: list[str]
+    face_shapes: list[str] = []
     style_id: str
     thumbnail: str
     description: str

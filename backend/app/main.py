@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.database import init_db
-from app.routers import generation, templates, comfyui_generation, auth, payment
+from app.routers import generation, templates, comfyui_generation, auth, payment, face_recommend, membership
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,8 @@ app.include_router(generation.router)
 app.include_router(comfyui_generation.router)
 app.include_router(auth.router)
 app.include_router(payment.router)
+app.include_router(face_recommend.router)
+app.include_router(membership.router)
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)

@@ -36,3 +36,5 @@ backend/alembic/versions/__pycache__/
 .obsidian/
 .claude/
 output
+hairstyle.db
+alias-hs.sh

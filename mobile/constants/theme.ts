@@ -12,6 +12,13 @@ export const colors = {
   success: '#047857',
   danger: '#b91c1c',
   overlay: 'rgba(0,0,0,0.45)',
+  // Membership tier colors
+  tierFree: '#6b7280',
+  tierFreeBg: '#f3f4f6',
+  tierPro: '#2563eb',
+  tierProBg: '#eff6ff',
+  tierPremium: '#d97706',
+  tierPremiumBg: '#fffbeb',
 };
 
 export const spacing = {

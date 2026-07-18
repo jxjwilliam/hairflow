@@ -3,6 +3,7 @@ export interface Template {
   name: string;
   category: string;
   tags: string[];
+  face_shapes?: string[];
   style_id: string;
   thumbnail: string;
   description: string;
