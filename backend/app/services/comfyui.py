@@ -289,13 +289,21 @@ class ComfyUIService:
                     denoise=denoise,
                 )
         elif pipeline in ("flux", "flux_klein"):
+            unet_name = self._flux_unet_for(pipeline)
+            if checkpoint.endswith(".gguf"):
+                unet_name = checkpoint
+            elif checkpoint:
+                logger.warning(
+                    "Ignoring non-GGUF checkpoint %r for %s pipeline; using %s",
+                    checkpoint, pipeline, unet_name,
+                )
             if method == "txt2img":
                 workflow = self._build_flux_txt2img_workflow(
                     prompt=prompt,
-                    unet_name=checkpoint or self._flux_unet_for(pipeline),
+                    unet_name=unet_name,
                     clip_name1="clip_l.safetensors",
                     clip_name2=self._flux_clip_for(pipeline),
-                    vae_name="ae.safetensors",
+                    vae_name=self._flux_vae_for(pipeline),
                     width=width,
                     height=height,
                     steps=steps,
@@ -307,17 +315,34 @@ class ComfyUIService:
                 photo_bytes = base64.b64decode(photo_base64)
                 photo = Image.open(io.BytesIO(photo_bytes))
                 filename = await self._upload_image(photo, prefix="flux_input")
-                workflow = self._build_flux_img2img_workflow(
-                    image_filename=filename,
-                    prompt=prompt,
-                    unet_name=checkpoint or self._flux_unet_for(pipeline),
-                    clip_name1="clip_l.safetensors",
-                    clip_name2=self._flux_clip_for(pipeline),
-                    vae_name="ae.safetensors",
-                    steps=steps,
-                    seed=effective_seed,
-                    denoise=denoise,
-                )
+                if pipeline == "flux_klein":
+                    edit_prompt = (
+                        f"Give the person in the image this hairstyle: {prompt}. "
+                        "Keep the person's face, facial features, expression, "
+                        "skin tone, head pose, background, clothing and lighting "
+                        "exactly the same. Only change the hair."
+                    )
+                    workflow = self._build_flux_klein_edit_workflow(
+                        image_filename=filename,
+                        prompt=edit_prompt,
+                        unet_name=unet_name,
+                        clip_name=self._flux_clip_for(pipeline),
+                        vae_name=self._flux_vae_for(pipeline),
+                        steps=steps,
+                        seed=effective_seed,
+                    )
+                else:
+                    workflow = self._build_flux_img2img_workflow(
+                        image_filename=filename,
+                        prompt=prompt,
+                        unet_name=unet_name,
+                        clip_name1="clip_l.safetensors",
+                        clip_name2=self._flux_clip_for(pipeline),
+                        vae_name=self._flux_vae_for(pipeline),
+                        steps=steps,
+                        seed=effective_seed,
+                        denoise=denoise,
+                    )
         else:
             raise ComfyUIError(f"Unknown pipeline: {pipeline}")
 
@@ -344,6 +369,13 @@ class ComfyUIService:
         if pipeline == "flux_klein":
             return "qwen_3_4b.safetensors"
         return "t5xxl_fp16.safetensors"
+
+    @staticmethod
+    def _flux_vae_for(pipeline: str) -> str:
+        """Return the VAE filename for the given FLUX pipeline."""
+        if pipeline == "flux_klein":
+            return "flux2-vae.safetensors"
+        return "ae.safetensors"
 
     # ------------------------------------------------------------------
     # Workflow builders
@@ -642,6 +674,146 @@ class ComfyUIService:
             },
         }
 
+    def _build_flux_klein_edit_workflow(
+        self,
+        image_filename: str,
+        prompt: str,
+        unet_name: str,
+        clip_name: str,
+        vae_name: str,
+        steps: int,
+        seed: int,
+    ) -> dict:
+        """Build the FLUX.2 Klein native image-edit workflow.
+
+        Follows the official ComfyUI "Image Edit (Flux.2 Klein 4B Distilled)"
+        template: the selfie is VAE-encoded and injected as ReferenceLatent
+        conditioning, so the model edits per instruction instead of resampling
+        the whole latent (generic img2img at high denoise destroys identity).
+
+        Node layout:
+          1:  LoadImage               → IMAGE (user photo)
+          2:  UnetLoaderGGUF          → MODEL
+          3:  CLIPLoader (flux2)      → CLIP
+          4:  VAELoader               → VAE
+          5:  CLIPTextEncode          → CONDITIONING (edit instruction)
+          6:  ConditioningZeroOut     → CONDITIONING (negative)
+          7:  ImageScaleToTotalPixels → IMAGE (~1MP)
+          8:  VAEEncode               → LATENT (reference)
+          9:  ReferenceLatent         → positive conditioning
+          10: ReferenceLatent         → negative conditioning
+          11: GetImageSize            → width, height
+          12: EmptyFlux2LatentImage   → LATENT canvas
+          13: CFGGuider (cfg=1.0)     → GUIDER
+          14: KSamplerSelect (euler)  → SAMPLER
+          15: Flux2Scheduler          → SIGMAS
+          16: RandomNoise             → NOISE
+          17: SamplerCustomAdvanced   → LATENT
+          18: VAEDecode               → IMAGE
+          19: SaveImage
+        """
+        return {
+            "1": {
+                "inputs": {"image": image_filename},
+                "class_type": "LoadImage",
+            },
+            "2": {
+                "inputs": {"unet_name": unet_name},
+                "class_type": "UnetLoaderGGUF",
+            },
+            "3": {
+                "inputs": {"clip_name": clip_name, "type": "flux2"},
+                "class_type": "CLIPLoader",
+            },
+            "4": {
+                "inputs": {"vae_name": vae_name},
+                "class_type": "VAELoader",
+            },
+            "5": {
+                "inputs": {"text": prompt, "clip": ["3", 0]},
+                "class_type": "CLIPTextEncode",
+            },
+            "6": {
+                "inputs": {"conditioning": ["5", 0]},
+                "class_type": "ConditioningZeroOut",
+            },
+            "7": {
+                "inputs": {
+                    "image": ["1", 0],
+                    "upscale_method": "nearest-exact",
+                    "megapixels": 1.0,
+                    "resolution_steps": 1,
+                },
+                "class_type": "ImageScaleToTotalPixels",
+            },
+            "8": {
+                "inputs": {"pixels": ["7", 0], "vae": ["4", 0]},
+                "class_type": "VAEEncode",
+            },
+            "9": {
+                "inputs": {"conditioning": ["5", 0], "latent": ["8", 0]},
+                "class_type": "ReferenceLatent",
+            },
+            "10": {
+                "inputs": {"conditioning": ["6", 0], "latent": ["8", 0]},
+                "class_type": "ReferenceLatent",
+            },
+            "11": {
+                "inputs": {"image": ["7", 0]},
+                "class_type": "GetImageSize",
+            },
+            "12": {
+                "inputs": {
+                    "width": ["11", 0],
+                    "height": ["11", 1],
+                    "batch_size": 1,
+                },
+                "class_type": "EmptyFlux2LatentImage",
+            },
+            "13": {
+                "inputs": {
+                    "model": ["2", 0],
+                    "positive": ["9", 0],
+                    "negative": ["10", 0],
+                    "cfg": 1.0,
+                },
+                "class_type": "CFGGuider",
+            },
+            "14": {
+                "inputs": {"sampler_name": "euler"},
+                "class_type": "KSamplerSelect",
+            },
+            "15": {
+                "inputs": {"steps": steps, "width": ["11", 0], "height": ["11", 1]},
+                "class_type": "Flux2Scheduler",
+            },
+            "16": {
+                "inputs": {"noise_seed": seed},
+                "class_type": "RandomNoise",
+            },
+            "17": {
+                "inputs": {
+                    "noise": ["16", 0],
+                    "guider": ["13", 0],
+                    "sampler": ["14", 0],
+                    "sigmas": ["15", 0],
+                    "latent_image": ["12", 0],
+                },
+                "class_type": "SamplerCustomAdvanced",
+            },
+            "18": {
+                "inputs": {"samples": ["17", 0], "vae": ["4", 0]},
+                "class_type": "VAEDecode",
+            },
+            "19": {
+                "inputs": {
+                    "filename_prefix": "flux_klein_edit",
+                    "images": ["18", 0],
+                },
+                "class_type": "SaveImage",
+            },
+        }
+
     # ------------------------------------------------------------------
     # Low-level ComfyUI HTTP helpers
     # ------------------------------------------------------------------
@@ -678,7 +850,28 @@ class ComfyUIService:
         url = f"{self.base_url}/prompt"
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(url, json=payload)
-            resp.raise_for_status()
+            if resp.status_code != 200:
+                # ComfyUI returns detailed validation errors — surface them
+                # instead of an opaque HTTPStatusError.
+                detail = resp.text[:500]
+                try:
+                    body = resp.json()
+                    node_errors = body.get("node_errors")
+                    if node_errors:
+                        parts = [
+                            err.get("details", err.get("message", ""))
+                            for node in node_errors.values()
+                            for err in node.get("errors", [])
+                        ]
+                        detail = "; ".join(p for p in parts if p) or detail
+                    elif body.get("error"):
+                        detail = str(body["error"].get("message", body["error"]))
+                except Exception:
+                    pass
+                logger.error("ComfyUI /prompt rejected workflow (%s): %s", resp.status_code, detail)
+                raise ComfyUIError(
+                    f"ComfyUI rejected the workflow (HTTP {resp.status_code}): {detail}"
+                )
             data = resp.json()
 
         if "prompt_id" not in data:

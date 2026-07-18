@@ -83,6 +83,11 @@ export default function OptionsScreen() {
               if (p.value !== 'photomaker') {
                 setMethod('img2img');
               }
+              if (p.value.startsWith('flux')) {
+                setSteps((prev) => (prev < 2 || prev > 8 ? 4 : prev));
+              } else {
+                setSteps((prev) => (prev < 15 ? 25 : prev));
+              }
             }}
             accessibilityRole="button"
             accessibilityLabel={p.label}

@@ -144,6 +144,8 @@ class FaceService:
             photo_bytes = base64.b64decode(photo_base64)
             image = Image.open(io.BytesIO(photo_bytes))
             image = ImageOps.exif_transpose(image)
+            # JPEG has no alpha channel — web uploads arrive as RGBA PNG
+            image = image.convert("RGB")
             w, h = image.size
             x, y, bw, bh = result["bbox"]
 

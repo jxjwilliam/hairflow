@@ -50,8 +50,9 @@ export default function PreviewScreen() {
       templateId: templateId!,
       templateName: templateName || templateId || '发型',
       id: `hist_${Date.now()}`,
+      options,
     }).catch(() => {});
-  }, [templateId, templateName]);
+  }, [templateId, templateName, options]);
 
   const generateMutation = useMutation({
     mutationFn: () => generateHairstyle(photoBase64!, templateId!, options),

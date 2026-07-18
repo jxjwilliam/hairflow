@@ -181,6 +181,8 @@ export default function HistoryScreen() {
                   params: {
                     imageUrl: item.imageUrl,
                     templateName: item.templateName,
+                    ...(item.options ? { generationOptions: JSON.stringify(item.options) } : {}),
+                    createdAt: String(item.createdAt),
                   },
                 })
               }

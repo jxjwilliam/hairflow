@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { GenerationOptions } from '../types';
 
 const HISTORY_KEY = 'hairstyle.generationHistory.v1';
 const MAX_ITEMS = 60;
@@ -9,6 +10,7 @@ export interface HistoryItem {
   templateId: string;
   templateName: string;
   createdAt: number;
+  options?: GenerationOptions;
 }
 
 export async function loadHistory(): Promise<HistoryItem[]> {
@@ -31,6 +33,7 @@ export async function addHistoryItem(
     templateId: item.templateId,
     templateName: item.templateName,
     createdAt: Date.now(),
+    options: item.options,
   };
   const prev = await loadHistory();
   const merged = [next, ...prev.filter((h) => h.imageUrl !== next.imageUrl)].slice(0, MAX_ITEMS);
