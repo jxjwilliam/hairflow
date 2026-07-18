@@ -1,6 +1,4 @@
 import asyncio
-import base64
-import io
 import json
 import logging
 import uuid
@@ -109,18 +107,21 @@ async def comfyui_generate(
 
     # --- Step 5: ComfyUI generation ---
     try:
-        logger.info("Submitting to ComfyUI (style=%s, checkpoint=%s)...", req.style_id, template.get("checkpoint"))
-        image_bytes = await comfyui_service.generate_hairstyle(
+        logger.info("Submitting to ComfyUI (style=%s, pipeline=%s, method=%s)...",
+                     req.style_id, req.pipeline, req.method)
+        cp = req.checkpoint or template.get("checkpoint", "")
+        image_bytes = await comfyui_service.generate(
+            pipeline=req.pipeline,
+            method=req.method,
             photo_base64=photo_for_generation,
             prompt=template["positive_prompt"],
             negative_prompt=template.get("negative_prompt", ""),
-            checkpoint=template.get("checkpoint", "photon_v1.safetensors"),
-            photomaker_model=template.get("photomaker_model", "photomaker-v1.bin"),
+            checkpoint=cp,
             width=template.get("width", 512),
             height=template.get("height", 768),
-            steps=template.get("steps", 25),
-            cfg=template.get("cfg", 6.5),
-            denoise=template.get("denoise", 0.85),
+            steps=req.steps,
+            cfg=req.cfg,
+            denoise=req.denoise,
         )
         logger.info("ComfyUI generation complete: %d bytes", len(image_bytes))
     except ComfyUIError as e:
@@ -197,12 +198,14 @@ async def comfyui_regenerate(
         photo_for_generation = cropped
 
     try:
-        image_bytes = await comfyui_service.generate_hairstyle(
+        cp = req.checkpoint or template.get("checkpoint", "")
+        image_bytes = await comfyui_service.generate(
+            pipeline="photomaker",
+            method="photomaker",
             photo_base64=photo_for_generation,
             prompt=adjusted_prompt,
             negative_prompt=template.get("negative_prompt", ""),
-            checkpoint=template.get("checkpoint", "photon_v1.safetensors"),
-            photomaker_model=template.get("photomaker_model", "photomaker-v1.bin"),
+            checkpoint=cp,
             width=template.get("width", 512),
             height=template.get("height", 768),
             steps=req.steps or template.get("steps", 25),
@@ -273,17 +276,19 @@ async def comfyui_generate_multi(
         angle_prompt = f"{template['positive_prompt']}, {ANGLE_PROMPTS[angle]}"
         async with _comfyui_sem:
             try:
-                image_bytes = await comfyui_service.generate_hairstyle(
+                cp = req.checkpoint or template.get("checkpoint", "")
+                image_bytes = await comfyui_service.generate(
+                    pipeline=req.pipeline,
+                    method=req.method,
                     photo_base64=photo_for_generation,
                     prompt=angle_prompt,
                     negative_prompt=template.get("negative_prompt", ""),
-                    checkpoint=template.get("checkpoint", "photon_v1.safetensors"),
-                    photomaker_model=template.get("photomaker_model", "photomaker-v1.bin"),
+                    checkpoint=cp,
                     width=template.get("width", 512),
                     height=template.get("height", 768),
-                    steps=template.get("steps", 25),
-                    cfg=template.get("cfg", 6.5),
-                    denoise=template.get("denoise", 0.85),
+                    steps=req.steps,
+                    cfg=req.cfg,
+                    denoise=req.denoise,
                 )
                 url, image_id = _save_locally(image_bytes, base_url=base_url)
             except ComfyUIError as e:

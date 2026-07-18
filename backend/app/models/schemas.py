@@ -16,6 +16,13 @@ class TemplateOut(BaseModel):
 class GenerateRequest(BaseModel):
     photo_base64: str
     style_id: str
+    # Generation options
+    pipeline: str = "photomaker"   # photomaker | sd15 | flux | flux_klein
+    method: str = "photomaker"     # photomaker | txt2img | img2img
+    checkpoint: str = ""
+    denoise: float = 0.85
+    steps: int = 25
+    cfg: float = 6.5
 
 
 class GenerateResponse(BaseModel):

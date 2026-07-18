@@ -1,11 +1,9 @@
 import base64
 import io
 import logging
-import tempfile
+import random
 import time
 import uuid
-from pathlib import Path
-from typing import Optional
 
 import httpx
 from PIL import Image
@@ -74,8 +72,8 @@ class ComfyUIService:
         filename = await self._upload_image(photo, prefix="hairstyle_input")
 
         # 3. Build PhotoMaker workflow
-        import random
-        effective_seed = seed if seed is not None else random.randint(0, 2**31 - 1)
+        import random as random_module
+        effective_seed = seed if seed is not None else random_module.randint(0, 2**31 - 1)
         workflow = self._build_photomaker_workflow(
             image_filename=filename,
             checkpoint=checkpoint,
@@ -199,6 +197,447 @@ class ComfyUIService:
                     "filename_prefix": "hairstyle_result",
                     "images": ["8", 0],
                 },
+                "class_type": "SaveImage",
+            },
+        }
+
+    # ------------------------------------------------------------------
+    # Pipeline dispatch
+    # ------------------------------------------------------------------
+
+    async def generate(
+        self,
+        pipeline: str,
+        method: str,
+        prompt: str,
+        negative_prompt: str = "",
+        photo_base64: str | None = None,
+        checkpoint: str = "",
+        width: int = 512,
+        height: int = 768,
+        steps: int = 25,
+        cfg: float = 6.5,
+        denoise: float = 0.85,
+        seed: int | None = None,
+        timeout: float = 300.0,
+    ) -> bytes:
+        """Run any pipeline: photomaker, sd15, flux, flux_klein with txt2img or img2img.
+
+        Args:
+            pipeline: Model family - photomaker | sd15 | flux | flux_klein
+            method: Generation method - photomaker | txt2img | img2img
+            prompt: Positive prompt.
+            negative_prompt: Negative prompt (ignored by flux pipelines).
+            photo_base64: Required for photomaker/img2img, optional for txt2img.
+            checkpoint: Override auto-detected checkpoint filename.
+            width, height: Output dimensions.
+            steps, cfg, denoise: Generation parameters.
+            seed: Explicit seed (random if None).
+            timeout: Max wait for ComfyUI completion.
+        """
+        effective_seed = seed if seed is not None else random.randint(0, 2**31 - 1)
+
+        if pipeline == "photomaker":
+            if not photo_base64:
+                raise ComfyUIError("photo_base64 required for photomaker pipeline")
+            photo_bytes = base64.b64decode(photo_base64)
+            photo = Image.open(io.BytesIO(photo_bytes))
+            filename = await self._upload_image(photo, prefix="photomaker_input")
+            template_cp = checkpoint or "photon_v1.safetensors"
+            # Use photomaker-v2.bin? No — MVP only supports v1.
+            workflow = self._build_photomaker_workflow(
+                image_filename=filename,
+                checkpoint=template_cp,
+                photomaker_model="photomaker-v1.bin",
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+                width=width,
+                height=height,
+                steps=steps,
+                cfg=cfg,
+                seed=effective_seed,
+                denoise=denoise,
+            )
+        elif pipeline == "sd15":
+            if method == "txt2img":
+                workflow = self._build_sd15_txt2img_workflow(
+                    prompt=prompt,
+                    negative_prompt=negative_prompt,
+                    checkpoint=checkpoint or "realisticVisionV60B1_v60B1VAE.safetensors",
+                    width=width,
+                    height=height,
+                    steps=steps,
+                    cfg=cfg,
+                    seed=effective_seed,
+                )
+            else:  # img2img
+                if not photo_base64:
+                    raise ComfyUIError("photo_base64 required for img2img mode")
+                photo_bytes = base64.b64decode(photo_base64)
+                photo = Image.open(io.BytesIO(photo_bytes))
+                filename = await self._upload_image(photo, prefix="sd15_input")
+                workflow = self._build_sd15_img2img_workflow(
+                    image_filename=filename,
+                    prompt=prompt,
+                    negative_prompt=negative_prompt,
+                    checkpoint=checkpoint or "realisticVisionV60B1_v60B1VAE.safetensors",
+                    width=width,
+                    height=height,
+                    steps=steps,
+                    cfg=cfg,
+                    seed=effective_seed,
+                    denoise=denoise,
+                )
+        elif pipeline in ("flux", "flux_klein"):
+            if method == "txt2img":
+                workflow = self._build_flux_txt2img_workflow(
+                    prompt=prompt,
+                    unet_name=checkpoint or self._flux_unet_for(pipeline),
+                    clip_name1="clip_l.safetensors",
+                    clip_name2=self._flux_clip_for(pipeline),
+                    vae_name="ae.safetensors",
+                    width=width,
+                    height=height,
+                    steps=steps,
+                    seed=effective_seed,
+                )
+            else:  # img2img
+                if not photo_base64:
+                    raise ComfyUIError("photo_base64 required for img2img mode")
+                photo_bytes = base64.b64decode(photo_base64)
+                photo = Image.open(io.BytesIO(photo_bytes))
+                filename = await self._upload_image(photo, prefix="flux_input")
+                workflow = self._build_flux_img2img_workflow(
+                    image_filename=filename,
+                    prompt=prompt,
+                    unet_name=checkpoint or self._flux_unet_for(pipeline),
+                    clip_name1="clip_l.safetensors",
+                    clip_name2=self._flux_clip_for(pipeline),
+                    vae_name="ae.safetensors",
+                    steps=steps,
+                    seed=effective_seed,
+                    denoise=denoise,
+                )
+        else:
+            raise ComfyUIError(f"Unknown pipeline: {pipeline}")
+
+        prompt_id = await self._submit_workflow(workflow)
+        result_filename = await self._wait_for_result(prompt_id, timeout=timeout)
+        image_bytes = await self._download_result(result_filename)
+
+        logger.info(
+            "ComfyUI generation complete: pipeline=%s method=%s prompt_id=%s filename=%s size=%d",
+            pipeline, method, prompt_id, result_filename, len(image_bytes),
+        )
+        return image_bytes
+
+    @staticmethod
+    def _flux_unet_for(pipeline: str) -> str:
+        """Return the default UNET GGUF filename for the given FLUX pipeline."""
+        if pipeline == "flux_klein":
+            return "flux-2-klein-4b-Q8_0.gguf"
+        return "flux1-schnell-Q8_0.gguf"
+
+    @staticmethod
+    def _flux_clip_for(pipeline: str) -> str:
+        """Return the second CLIP encoder for the given FLUX pipeline."""
+        if pipeline == "flux_klein":
+            return "qwen_3_4b.safetensors"
+        return "t5xxl_fp16.safetensors"
+
+    # ------------------------------------------------------------------
+    # Workflow builders
+    # ------------------------------------------------------------------
+
+    def _build_sd15_txt2img_workflow(
+        self,
+        prompt: str,
+        negative_prompt: str,
+        checkpoint: str,
+        width: int,
+        height: int,
+        steps: int,
+        cfg: float,
+        seed: int,
+    ) -> dict:
+        """Build a standard SD1.5 text-to-image workflow.
+
+        Node layout:
+          1: CheckpointLoaderSimple  → MODEL, CLIP, VAE
+          2: CLIPTextEncode          → positive conditioning
+          3: CLIPTextEncode          → negative conditioning
+          4: EmptyLatentImage        → LATENT
+          5: KSampler                → LATENT
+          6: VAEDecode               → IMAGE
+          7: SaveImage
+        """
+        neg = negative_prompt or "ugly, deformed, bad anatomy, blurry, low quality"
+        return {
+            "1": {
+                "inputs": {"ckpt_name": checkpoint},
+                "class_type": "CheckpointLoaderSimple",
+            },
+            "2": {
+                "inputs": {"text": prompt, "clip": ["1", 1]},
+                "class_type": "CLIPTextEncode",
+            },
+            "3": {
+                "inputs": {"text": neg, "clip": ["1", 1]},
+                "class_type": "CLIPTextEncode",
+            },
+            "4": {
+                "inputs": {"width": width, "height": height, "batch_size": 1},
+                "class_type": "EmptyLatentImage",
+            },
+            "5": {
+                "inputs": {
+                    "seed": seed,
+                    "steps": steps,
+                    "cfg": cfg,
+                    "sampler_name": "euler_ancestral",
+                    "scheduler": "normal",
+                    "denoise": 1.0,
+                    "model": ["1", 0],
+                    "positive": ["2", 0],
+                    "negative": ["3", 0],
+                    "latent_image": ["4", 0],
+                },
+                "class_type": "KSampler",
+            },
+            "6": {
+                "inputs": {"samples": ["5", 0], "vae": ["1", 2]},
+                "class_type": "VAEDecode",
+            },
+            "7": {
+                "inputs": {"filename_prefix": "sd15_result", "images": ["6", 0]},
+                "class_type": "SaveImage",
+            },
+        }
+
+    def _build_sd15_img2img_workflow(
+        self,
+        image_filename: str,
+        prompt: str,
+        negative_prompt: str,
+        checkpoint: str,
+        width: int,
+        height: int,
+        steps: int,
+        cfg: float,
+        seed: int,
+        denoise: float,
+    ) -> dict:
+        """Build SD1.5 image-to-image workflow using the user photo as base.
+
+        Node layout:
+          1: LoadImage              → IMAGE
+          2: CheckpointLoaderSimple → MODEL, CLIP, VAE
+          3: CLIPTextEncode         → positive conditioning
+          4: CLIPTextEncode         → negative conditioning
+          5: VAEEncode              → LATENT (from user photo)
+          6: KSampler               → LATENT (with denoise < 1.0)
+          7: VAEDecode              → IMAGE
+          8: SaveImage
+        """
+        neg = negative_prompt or "ugly, deformed, bad anatomy, blurry, low quality"
+        return {
+            "1": {
+                "inputs": {"image": image_filename},
+                "class_type": "LoadImage",
+            },
+            "2": {
+                "inputs": {"ckpt_name": checkpoint},
+                "class_type": "CheckpointLoaderSimple",
+            },
+            "3": {
+                "inputs": {"text": prompt, "clip": ["2", 1]},
+                "class_type": "CLIPTextEncode",
+            },
+            "4": {
+                "inputs": {"text": neg, "clip": ["2", 1]},
+                "class_type": "CLIPTextEncode",
+            },
+            "5": {
+                "inputs": {"pixels": ["1", 0], "vae": ["2", 2]},
+                "class_type": "VAEEncode",
+            },
+            "6": {
+                "inputs": {
+                    "seed": seed,
+                    "steps": steps,
+                    "cfg": cfg,
+                    "sampler_name": "euler_ancestral",
+                    "scheduler": "normal",
+                    "denoise": denoise,
+                    "model": ["2", 0],
+                    "positive": ["3", 0],
+                    "negative": ["4", 0],
+                    "latent_image": ["5", 0],
+                },
+                "class_type": "KSampler",
+            },
+            "7": {
+                "inputs": {"samples": ["6", 0], "vae": ["2", 2]},
+                "class_type": "VAEDecode",
+            },
+            "8": {
+                "inputs": {"filename_prefix": "sd15_img2img_result", "images": ["7", 0]},
+                "class_type": "SaveImage",
+            },
+        }
+
+    def _build_flux_txt2img_workflow(
+        self,
+        prompt: str,
+        unet_name: str,
+        clip_name1: str,
+        clip_name2: str,
+        vae_name: str,
+        width: int,
+        height: int,
+        steps: int,
+        seed: int,
+    ) -> dict:
+        """Build FLUX GGUF text-to-image workflow.
+
+        Uses ComfyUI-GGUF nodes (UnetLoaderGGUF + DualCLIPLoaderGGUF).
+
+        Node layout:
+          1: UnetLoaderGGUF        → MODEL
+          2: DualCLIPLoaderGGUF    → CLIP
+          3: VAELoader             → VAE
+          4: CLIPTextEncode        → positive conditioning
+          5: EmptyLatentImage      → LATENT
+          6: KSampler              → LATENT
+          7: VAEDecode             → IMAGE
+          8: SaveImage
+        """
+        # FLUX.1 schnell uses fixed cfg=1.0; FLUX.2 Klein uses guidance
+        return {
+            "1": {
+                "inputs": {"unet_name": unet_name},
+                "class_type": "UnetLoaderGGUF",
+            },
+            "2": {
+                "inputs": {
+                    "clip_name1": clip_name1,
+                    "clip_name2": clip_name2,
+                    "type": "flux",
+                },
+                "class_type": "DualCLIPLoaderGGUF",
+            },
+            "3": {
+                "inputs": {"vae_name": vae_name},
+                "class_type": "VAELoader",
+            },
+            "4": {
+                "inputs": {"text": prompt, "clip": ["2", 0]},
+                "class_type": "CLIPTextEncode",
+            },
+            "5": {
+                "inputs": {"width": width, "height": height, "batch_size": 1},
+                "class_type": "EmptyLatentImage",
+            },
+            "6": {
+                "inputs": {
+                    "seed": seed,
+                    "steps": steps,
+                    "cfg": 1.0,
+                    "sampler_name": "euler_ancestral",
+                    "scheduler": "normal",
+                    "denoise": 1.0,
+                    "model": ["1", 0],
+                    "positive": ["4", 0],
+                    "negative": ["4", 0],
+                    "latent_image": ["5", 0],
+                },
+                "class_type": "KSampler",
+            },
+            "7": {
+                "inputs": {"samples": ["6", 0], "vae": ["3", 0]},
+                "class_type": "VAEDecode",
+            },
+            "8": {
+                "inputs": {"filename_prefix": "flux_result", "images": ["7", 0]},
+                "class_type": "SaveImage",
+            },
+        }
+
+    def _build_flux_img2img_workflow(
+        self,
+        image_filename: str,
+        prompt: str,
+        unet_name: str,
+        clip_name1: str,
+        clip_name2: str,
+        vae_name: str,
+        steps: int,
+        seed: int,
+        denoise: float,
+    ) -> dict:
+        """Build FLUX GGUF image-to-image workflow using the user photo as base.
+
+        Node layout:
+          1: LoadImage              → IMAGE
+          2: UnetLoaderGGUF         → MODEL
+          3: DualCLIPLoaderGGUF     → CLIP
+          4: VAELoader              → VAE
+          5: CLIPTextEncode         → positive conditioning
+          6: VAEEncode              → LATENT (from user photo)
+          7: KSampler               → LATENT (with denoise)
+          8: VAEDecode              → IMAGE
+          9: SaveImage
+        """
+        return {
+            "1": {
+                "inputs": {"image": image_filename},
+                "class_type": "LoadImage",
+            },
+            "2": {
+                "inputs": {"unet_name": unet_name},
+                "class_type": "UnetLoaderGGUF",
+            },
+            "3": {
+                "inputs": {
+                    "clip_name1": clip_name1,
+                    "clip_name2": clip_name2,
+                    "type": "flux",
+                },
+                "class_type": "DualCLIPLoaderGGUF",
+            },
+            "4": {
+                "inputs": {"vae_name": vae_name},
+                "class_type": "VAELoader",
+            },
+            "5": {
+                "inputs": {"text": prompt, "clip": ["3", 0]},
+                "class_type": "CLIPTextEncode",
+            },
+            "6": {
+                "inputs": {"pixels": ["1", 0], "vae": ["4", 0]},
+                "class_type": "VAEEncode",
+            },
+            "7": {
+                "inputs": {
+                    "seed": seed,
+                    "steps": steps,
+                    "cfg": 1.0,
+                    "sampler_name": "euler_ancestral",
+                    "scheduler": "normal",
+                    "denoise": denoise,
+                    "model": ["2", 0],
+                    "positive": ["5", 0],
+                    "negative": ["5", 0],
+                    "latent_image": ["6", 0],
+                },
+                "class_type": "KSampler",
+            },
+            "8": {
+                "inputs": {"samples": ["7", 0], "vae": ["4", 0]},
+                "class_type": "VAEDecode",
+            },
+            "9": {
+                "inputs": {"filename_prefix": "flux_img2img_result", "images": ["8", 0]},
                 "class_type": "SaveImage",
             },
         }
