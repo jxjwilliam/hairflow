@@ -5,26 +5,26 @@ AI 虚拟发型试戴 App（MVP 阶段），面向国内理发行业。
 ## Tech Stack
 
 - **Frontend:** React Native (Expo SDK 57), Expo Router, TypeScript, @tanstack/react-query, axios
-- **Backend:** Python 3.12, FastAPI, uvicorn, httpx, Pillow, mediapipe, opencv-python-headless
-- **AI:** Local **ComfyUI** + **PhotoMaker v1** + SD1.5 (`photon_v1.safetensors`)
+- **Backend:** Python 3.12, FastAPI, uvicorn, httpx, Pillow, mediapipe, opencv-python-headless, SQLAlchemy async (SQLite)
+- **AI:** Local **ComfyUI** multi-pipeline — **PhotoMaker v1** + SD1.5 (`photon_v1.safetensors`) default; also `sd15`, `flux` (FLUX.1 Schnell GGUF), `flux_klein` (FLUX.2 Klein 4B GGUF, native edit workflow)
 - **Face detection:** MediaPipe (local), not Aliyun Vision
-- **Storage (dev):** Local disk — `backend/output/` for generations, `backend/static/thumbnails/` for catalog
+- **Storage (dev):** Local disk — `backend/output/` for generations, `backend/static/thumbnails/` for catalog; SQLite `backend/hairstyle.db` for users/orders/points
 - **Legacy (unused by mobile):** Meitu mtlab API (`meitu.py`), Alibaba OSS (`oss.py`)
 
 ## Architecture
 
 - Monorepo: `mobile/` + `backend/`
-- Mobile → HTTP → Backend → **ComfyUI** (`COMFYUI_URL`, default `http://127.0.0.1:8188`)
-- Active generate endpoint: `POST /api/comfyui/generate`
+- Mobile → HTTP (JWT Bearer) → Backend → **ComfyUI** (`COMFYUI_URL`, default `http://127.0.0.1:8188`)
+- Active generate endpoint: `POST /api/comfyui/generate` (accepts `pipeline` + `method`)
 - Templates served from `backend/data/templates_comfyui.json`
-- No database in MVP (JSON templates + local files)
-- No user system, no auth, no payments in MVP
+- SQLite database (`app/database.py`, models in `app/models/{user,order,points_ledger}.py`)
+- Auth: phone + dev magic code `888888` → JWT (`app/routers/auth.py`); points/membership/mock-payment implemented; `SKIP_POINTS_CHECK=true` by default in dev
 
 ```
 Mobile generation.ts
-  → POST /api/comfyui/generate { photo_base64, style_id: templateId }
+  → POST /api/comfyui/generate { photo_base64, style_id: templateId, pipeline, method, ... }
   → face_service (MediaPipe)
-  → comfyui_service (PhotoMaker workflow)
+  → comfyui_service.generate(pipeline, method, …)   # dispatches per-pipeline workflow
   → save backend/output/{uuid}.png
   → { image_url, image_id }
 ```
@@ -111,10 +111,18 @@ python scripts/generate_thumbnails.py --id m1 --force --seed 42
 | GET | `/` | Health check |
 | GET | `/api/templates` | List (optional `?category=men|women`); absolute thumbnail URLs |
 | GET | `/api/templates/{id}` | Detail |
-| POST | `/api/comfyui/generate` | **Primary** — PhotoMaker try-on (`photo_base64` + `style_id` = template id) |
+| POST | `/api/comfyui/generate` | **Primary** — multi-pipeline (`photo_base64` + `style_id` = template id + `pipeline`/`method`) |
+| POST | `/api/comfyui/regenerate` | Parameter-adjusted regeneration (length/curl/color → prompt) |
+| POST | `/api/comfyui/generate-multi` | 4-angle generation (front/left/right/back) |
 | GET | `/api/comfyui/output/{filename}` | Serve local generation output |
+| POST | `/api/v1/auth/sms/send` · `/sms/login` | Phone login (dev magic code `888888`) → JWT |
+| POST | `/api/v1/auth/wechat/login` · `/alipay/login` | Third-party login (stub) |
+| GET | `/api/v1/auth/me` | Current user profile (JWT) |
+| GET | `/api/v1/payment/packages` · POST `/order` · POST `/mock/notify` | Points packages / order / mock payment callback |
+| GET | `/api/v1/membership/tiers` · POST `/upgrade` · GET `/my-status` | Membership tiers / upgrade / status |
+| POST | `/api/recommend/by-photo` | Face-shape detection + template recommendation |
 | POST | `/api/generate` | Legacy Meitu (not used by mobile) |
-| POST | `/api/regenerate` | Not yet implemented (returns 501) |
+| POST | `/api/regenerate` | Legacy stub (returns 501) |
 
 ## TypeScript Interfaces (mobile/types.ts)
 
@@ -138,9 +146,20 @@ interface GenerateResult {
 - **Error handling** — never empty catch blocks, always show user-facing feedback
 - **Commits** — only when explicitly requested
 
-## P1 Items (not yet implemented)
-- Hairstyle parameter sliders (length, curl, color, bangs)
-- Multi-view switching
-- Before/after comparison
-- User login (phone/WeChat/Alipay)
-- Credit consumption + payment
+## P1 Items (implemented)
+- ~~Hairstyle parameter sliders (length, curl, color)~~ ✅ via `/api/comfyui/regenerate` + `ParamPanel.tsx`
+- ~~Multi-view switching~~ ✅ via `/api/comfyui/generate-multi` + `AngleSelector.tsx`
+- ~~Before/after comparison~~ ✅ `BeforeAfterSlider.tsx`
+- ~~User login~~ ✅ phone + magic code (WeChat/Alipay still stubs)
+- ~~Credit consumption + payment~~ ✅ points + mock payment (`SKIP_POINTS_CHECK=true` in dev)
+
+## P1/P2 Items (not yet implemented)
+- Real SMS channel + real WeChat/Alipay payments
+- Cloud generation history, favorites
+- Workflow upgrades (HairPort / ACE++)
+
+## Pipeline Notes (flux_klein)
+- `flux_klein` img2img uses the **native edit workflow** (`_build_flux_klein_edit_workflow`): `CLIPLoader(type="flux2")` + `qwen_3_4b.safetensors`, selfie injected via `ReferenceLatent`, `CFGGuider(1.0)` + `euler` + `Flux2Scheduler` — preserves facial identity; see `docs/oc_flux2_klein_integration.md`
+- flux pipelines only accept `.gguf` checkpoint overrides (template SD1.5 checkpoint is ignored)
+- ComfyUI 400 validation details are surfaced in the 502 response body
+- Required models: `flux-2-klein-4b-Q8_0.gguf` (unet), `qwen_3_4b.safetensors` (text_encoders), `flux2-vae.safetensors` (vae)
