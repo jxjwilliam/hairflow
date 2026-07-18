@@ -4,6 +4,19 @@
 > **原则**：需要数据库时用 SQLite，避免外部依赖；先跑通功能，再考虑部署。
 > **状态**：Plan · 2026-07-17
 
+> **实现状态（2026-07-17 更新）**：本文档为设计计划，各项功能**已全部落地**（细节以代码与 README 为准）：
+>
+> | 章节 | 功能 | 状态 |
+> |------|------|------|
+> | 一 | 发型参数调整（`POST /api/comfyui/regenerate` + `prompt_builder.py` + `ParamPanel.tsx`） | ✅ 已实现 |
+> | 二 | 多角度切换（`POST /api/comfyui/generate-multi` + `AngleSelector.tsx`） | ✅ 已实现 |
+> | 三 | 原图对比（`BeforeAfterSlider.tsx`） | ✅ 已实现 |
+> | 四 | SQLite 数据库层（`app/database.py` + user/order/points_ledger 模型） | ✅ 已实现 |
+> | 五 | 用户登录（`app/routers/auth.py` 万能码 `888888` + JWT + `(auth)/login.tsx`） | ✅ 已实现 |
+> | 六 | 点数与支付（`app/routers/payment.py` mock 回调 + `recharge.tsx`；`SKIP_POINTS_CHECK=true` 开发豁免） | ✅ 已实现 |
+>
+> 后续新增：会员等级（`routers/membership.py`）、脸型推荐（`routers/face_recommend.py`，见 `oc_p2-implementation.md`）、多管线生成（PhotoMaker/SD1.5/FLUX.1/FLUX.2 Klein，见 `oc_flux2_klein_integration.md`）、效果图生成参数 metadata（`history.ts` + `result-view.tsx`）。
+
 ---
 
 ## 总览

@@ -91,6 +91,25 @@
 
 详见：`README.md`、`docs/ds_comfyui_setup.md`、`docs/ds_comfyui_proposal.md`。
 
+### 更新（2026-07-17 晚）：多管线 + 保脸修复 + 参数 metadata
+
+**生成管线**：`pipeline` 字段支持 `photomaker`（默认）/ `sd15` / `flux` / `flux_klein`，前端「生成选项」可选模型、文生图/图生图、变化程度、步数。
+
+**FLUX.2 Klein 保脸修复**：img2img 从通用高 denoise 重采样（丢脸、"模特脸"）改为**官方原生编辑工作流**（`CLIPLoader type="flux2"` + `ReferenceLatent` 注入自拍参考 + `CFGGuider 1.0` + `euler` + `Flux2Scheduler` 4 步），只换发型、保留脸部特征。提示词自动包装为编辑指令。详见 `docs/oc_flux2_klein_integration.md`。
+
+**当日修复的 bug**：
+- Web 上传 RGBA PNG → `crop_face` JPEG 报错（已加 `convert("RGB")`）
+- ComfyUI 400 错误被吞 → 现在 `node_errors` 详情透传到 502 响应
+- 模板 SD1.5 checkpoint 泄漏进 flux 管线当 UNET → 非 `.gguf` 覆盖值被忽略
+- `qwen_3_4b.safetensors` 在 Pinokio 共享盘扫不到 → 已复制进 ComfyUI 应用 `models/text_encoders/`
+- 选 FLUX 时步数默认 25（蒸馏模型会烤糊）→ 默认 4
+
+**效果图参数 metadata**：每次生成的 `pipeline/method/denoise/steps/cfg` 随历史存入本机（`history.ts`），「效果」详情页展示参数卡片。
+
+**账号体系**：手机号 + 万能码 `888888` 登录（JWT）、点数（`SKIP_POINTS_CHECK=true` 开发豁免）、mock 充值、会员等级、脸型推荐均已上线（SQLite `hairstyle.db`）。
+
+**测试**：`backend/tests/` 20 项全绿（含上述回归）；flux_klein img2img 对本机 ComfyUI 端到端实测通过（M3 Pro 约 131s/张）。
+
 ### 历史问题（2026-07-16，已绕过）
 
 `POST /api/generate` 曾返回 502，美图报 `[90002] GATEWAY_AUTHORIZED_ERROR`。根因是 Key 无 `portrait_edit` 付费权限；若要恢复美图路径，需企业认证并购买接口权限（国内 IP / ECS 出网）。
