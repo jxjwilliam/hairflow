@@ -31,3 +31,11 @@ export interface RegenerateParams {
   curl: number;
   color: string;
 }
+
+export interface GenerationOptions {
+  pipeline: 'photomaker' | 'sd15' | 'flux' | 'flux_klein';
+  method: 'photomaker' | 'txt2img' | 'img2img';
+  denoise: number;
+  steps: number;
+  cfg: number;
+}

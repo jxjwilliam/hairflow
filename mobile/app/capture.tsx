@@ -18,7 +18,7 @@ export default function CaptureScreen() {
     setPhotoUri(uri);
     setPhoto({ base64, uri });
     router.replace({
-      pathname: '/preview',
+      pathname: '/options',
       params: {
         templateId,
         templateName: templateName ?? '',

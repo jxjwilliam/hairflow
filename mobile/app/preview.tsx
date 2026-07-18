@@ -12,17 +12,25 @@ import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import { addHistoryItem } from '../services/history';
 import { useSession } from '../context/SessionContext';
 import { colors, spacing } from '../constants/theme';
-import type { RegenerateParams } from '../types';
+import type { GenerationOptions, RegenerateParams } from '../types';
 
 type ViewMode = 'single' | 'multi' | 'compare';
 type HistoryKey = 'single' | 'front';
 
 export default function PreviewScreen() {
-  const { templateId, templateName, photoBase64 } = useLocalSearchParams<{
+  const { templateId, templateName, photoBase64, generationOptions } = useLocalSearchParams<{
     templateId: string;
     templateName?: string;
     photoBase64: string;
+    generationOptions?: string;
   }>();
+
+  const options: GenerationOptions = React.useMemo(() => {
+    if (generationOptions) {
+      try { return JSON.parse(generationOptions); } catch {}
+    }
+    return { pipeline: 'photomaker', method: 'photomaker', denoise: 0.85, steps: 25, cfg: 6.5 };
+  }, [generationOptions]);
   const router = useRouter();
   const { clearPhoto } = useSession();
 
@@ -46,7 +54,7 @@ export default function PreviewScreen() {
   }, [templateId, templateName]);
 
   const generateMutation = useMutation({
-    mutationFn: () => generateHairstyle(photoBase64!, templateId!),
+    mutationFn: () => generateHairstyle(photoBase64!, templateId!, options),
     onSuccess: (data) => {
       setResultUrl(data.image_url);
       saveToHistory(data.image_url, 'single');
@@ -57,7 +65,7 @@ export default function PreviewScreen() {
   });
 
   const multiAngleMutation = useMutation({
-    mutationFn: () => generateMultiAngle(photoBase64!, templateId!),
+    mutationFn: () => generateMultiAngle(photoBase64!, templateId!, options),
     onSuccess: (data) => {
       setMultiAngleData(data.images);
       setResultUrl(data.images.front.url);
