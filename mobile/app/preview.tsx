@@ -2,7 +2,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
-import { generateHairstyle, regenerateHairstyle, generateMultiAngle } from '../services/generation';
+import { Video, ResizeMode } from 'expo-av';
+import {
+  generateHairstyle,
+  regenerateHairstyle,
+  generateMultiAngle,
+  generateVideo,
+} from '../services/generation';
 import LoadingOverlay from '../components/LoadingOverlay';
 import ResultView from '../components/ResultView';
 import ActionButtons from '../components/ActionButtons';
@@ -35,6 +41,7 @@ export default function PreviewScreen() {
   const { clearPhoto } = useSession();
 
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [activeAngle, setActiveAngle] = useState<AngleKey>('front');
   const [multiAngleData, setMultiAngleData] = useState<Record<string, { url: string; id: string }> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('single');
@@ -58,6 +65,7 @@ export default function PreviewScreen() {
     mutationFn: () => generateHairstyle(photoBase64!, templateId!, options),
     onSuccess: (data) => {
       setResultUrl(data.image_url);
+      setVideoUrl(null);
       saveToHistory(data.image_url, 'single');
     },
     onError: () => {
@@ -70,6 +78,7 @@ export default function PreviewScreen() {
     onSuccess: (data) => {
       setMultiAngleData(data.images);
       setResultUrl(data.images.front.url);
+      setVideoUrl(null);
       setActiveAngle('front');
       setViewMode('multi');
       Object.values(data.images).forEach((img) => saveToHistory(img.url, 'front'));
@@ -84,6 +93,7 @@ export default function PreviewScreen() {
     try {
       const data = await regenerateHairstyle(photoBase64!, templateId!, params);
       setResultUrl(data.image_url);
+      setVideoUrl(null);
       setMultiAngleData(null);
       setViewMode('single');
       saveToHistory(data.image_url, 'single');
@@ -93,6 +103,16 @@ export default function PreviewScreen() {
       setRegenerating(false);
     }
   };
+
+  const videoMutation = useMutation({
+    mutationFn: () => generateVideo({ imageUrl: resultUrl! }),
+    onSuccess: (data) => {
+      setVideoUrl(data.video_url);
+    },
+    onError: () => {
+      alert('短视频生成失败，请确认 ComfyUI 已启动且视频模型可用');
+    },
+  });
 
   useEffect(() => {
     if (photoBase64 && templateId) {
@@ -110,11 +130,18 @@ export default function PreviewScreen() {
       )
     : [];
 
-  const isLoading = generateMutation.isPending || multiAngleMutation.isPending || regenerating;
+  const isLoading = generateMutation.isPending
+    || multiAngleMutation.isPending
+    || videoMutation.isPending
+    || regenerating;
 
   return (
     <View style={styles.container}>
-      {isLoading && <LoadingOverlay message="AI 正在生成发型效果图…" />}
+      {isLoading && (
+        <LoadingOverlay
+          message={videoMutation.isPending ? '正在生成短视频（本机可能需要数分钟）…' : 'AI 正在生成发型效果图…'}
+        />
+      )}
 
       {currentImageUrl && (
         <ScrollView
@@ -182,6 +209,28 @@ export default function PreviewScreen() {
                 : undefined
             }
           />
+
+          <TouchableOpacity
+            style={[
+              styles.videoButton,
+              (!resultUrl || videoMutation.isPending) && styles.videoButtonDisabled,
+            ]}
+            onPress={() => videoMutation.mutate()}
+            disabled={!resultUrl || videoMutation.isPending}
+            accessibilityRole="button"
+            accessibilityLabel="生成短视频"
+          >
+            <Text style={styles.videoButtonText}>生成短视频</Text>
+          </TouchableOpacity>
+
+          {videoUrl && (
+            <Video
+              source={{ uri: videoUrl }}
+              useNativeControls
+              resizeMode={ResizeMode.CONTAIN}
+              style={styles.video}
+            />
+          )}
         </ScrollView>
       )}
 
@@ -243,6 +292,21 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 13,
     fontWeight: '600',
+  },
+  videoButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+  },
+  videoButtonDisabled: { opacity: 0.55 },
+  videoButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  video: {
+    width: '100%',
+    height: 360,
+    marginTop: spacing.md,
+    backgroundColor: '#000',
   },
   errorBox: {
     flex: 1,

@@ -14,6 +14,13 @@ export interface GenerateResult {
   image_id: string;
 }
 
+export interface VideoGenerateResult {
+  video_url: string;
+  video_id: string;
+  pipeline: string;
+  duration_s: number;
+}
+
 export interface AngleImages {
   front: { url: string; id: string };
   left: { url: string; id: string };
