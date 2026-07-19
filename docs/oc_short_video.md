@@ -1,5 +1,20 @@
 # Short Video — ComfyUI Integration
 
+## Node discovery results (live · 2026-07-19)
+
+Catalog: `backend/data/video_node_catalog.json`  
+ComfyUI: `http://127.0.0.1:8188`
+
+| Pipeline | missing | Key class_types (sample) |
+|----------|---------|--------------------------|
+| ltx | False | `LTXVImgToVideo`, `EmptyLTXVLatentVideo`, `LTXVConditioning`, `LTXVScheduler` (+ 37 total) |
+| hunyuan | False | `HunyuanImageToVideo`, `EmptyHunyuanLatentVideo`, `TextEncodeHunyuanVideo_ImageToVideo` (+ 17 total) |
+| animatediff | True | *(none — install required)* |
+| video_io | False | `ByteDanceCreateVideoAsset`, `CreateVideo`, `DecodeAndSaveVideo`, `SaveVideo` |
+
+Full lists are in the catalog JSON.
+
+
 > **Date:** 2026-07-19  
 > **Scope:** Task 1 — node discovery catalog (no generation yet)
 

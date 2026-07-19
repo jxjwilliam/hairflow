@@ -1,22 +1,82 @@
 {
   "comfyui_url": "http://127.0.0.1:8188",
-  "discovery_note": "ComfyUI unreachable at discovery time (connection refused). Re-run: make discover-video-nodes",
   "pipelines": {
     "ltx": {
-      "matched_class_types": [],
-      "missing": true
+      "matched_class_types": [
+        "EmptyLTXVLatentVideo",
+        "LTX2AttentionTunerPatch",
+        "LTX2AudioLatentNormalizingSampling",
+        "LTX2BlockLoraSelect",
+        "LTX2LoraLoaderAdvanced",
+        "LTX2MemoryEfficientSageAttentionPatch",
+        "LTX2SamplingPreviewOverride",
+        "LTX2_NAG",
+        "LTXAVTextEncoderLoader",
+        "LTXVAddGuide",
+        "LTXVAddGuideMulti",
+        "LTXVAddGuidesFromBatch",
+        "LTXVAudioVAEDecode",
+        "LTXVAudioVAEEncode",
+        "LTXVAudioVAELoader",
+        "LTXVAudioVideoMask",
+        "LTXVChunkFeedForward",
+        "LTXVConcatAVLatent",
+        "LTXVConditioning",
+        "LTXVContextWindows",
+        "LTXVCropGuides",
+        "LTXVEmptyLatentAudio",
+        "LTXVEnhanceAVideoKJ",
+        "LTXVImgToVideo",
+        "LTXVImgToVideoInplace",
+        "LTXVImgToVideoInplaceKJ",
+        "LTXVLatentUpsampler",
+        "LTXVPreprocess",
+        "LTXVReferenceAudio",
+        "LTXVScheduler",
+        "LTXVSeparateAVLatent",
+        "LtxvApiImageToVideo",
+        "LtxvApiTextToVideo",
+        "ModelMergeLTXV",
+        "ModelSamplingLTXV",
+        "TextGenerateLTX2Prompt",
+        "TorchCompileLTXModel"
+      ],
+      "missing": false
     },
     "hunyuan": {
-      "matched_class_types": [],
-      "missing": true
+      "matched_class_types": [
+        "CLIPTextEncodeHunyuanDiT",
+        "EmptyHunyuanImageLatent",
+        "EmptyHunyuanLatentVideo",
+        "EmptyHunyuanVideo15Latent",
+        "EmptyLatentHunyuan3Dv2",
+        "Hunyuan3Dv2Conditioning",
+        "Hunyuan3Dv2ConditioningMultiView",
+        "HunyuanImageToVideo",
+        "HunyuanRefinerLatent",
+        "HunyuanVideo15ImageToVideo",
+        "HunyuanVideo15LatentUpscaleWithModel",
+        "HunyuanVideo15SuperResolution",
+        "HunyuanVideoBlockLoraSelect",
+        "HunyuanVideoEncodeKeyframesToCond",
+        "LeapfusionHunyuanI2VPatcher",
+        "TextEncodeHunyuanVideo_ImageToVideo",
+        "VAEDecodeHunyuan3D"
+      ],
+      "missing": false
     },
     "animatediff": {
       "matched_class_types": [],
       "missing": true
     },
     "video_io": {
-      "matched_class_types": [],
-      "missing": true
+      "matched_class_types": [
+        "ByteDanceCreateVideoAsset",
+        "CreateVideo",
+        "DecodeAndSaveVideo",
+        "SaveVideo"
+      ],
+      "missing": false
     }
   }
 }
