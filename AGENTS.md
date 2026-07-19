@@ -56,8 +56,8 @@ Mobile generation.ts
 ### Project State
 - 15 seed templates (7 men, 8 women) in `backend/data/templates_comfyui.json`
 - Catalog PNGs in `backend/static/thumbnails/{id}.png` (regenerate via `scripts/generate_thumbnails.py`)
-- PhotoMaker try-on workflows in `backend/workflows/photomaker_hairstyle_*.json`
-- Catalog txt2img workflow: `backend/workflows/txt2img_hairstyle_catalog.json`
+- PhotoMaker try-on workflows in `backend/static/workflows/photomaker_hairstyle_*.json`
+- Catalog txt2img workflow: `backend/static/workflows/txt2img_hairstyle_catalog.json`
 - Meitu path (`POST /api/generate`) preserved but not used by the app
 - Face detection is **MediaPipe** (`app/services/face.py`), not a stub
 
@@ -67,7 +67,7 @@ Mobile generation.ts
    - `positive_prompt`, `negative_prompt`, `checkpoint`, `photomaker_model`, `width`, `height`, `steps`, `cfg`, `denoise`
 2. Optionally add matching `style_id` in `templates.json` for Meitu legacy compatibility
 3. Generate catalog thumb: `python scripts/generate_thumbnails.py --id <id> --force`
-4. Optionally add a PhotoMaker workflow JSON under `backend/workflows/` for manual ComfyUI testing
+4. Optionally add a PhotoMaker workflow JSON under `backend/static/workflows/` for manual ComfyUI testing
 
 ## Running
 

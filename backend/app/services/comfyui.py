@@ -45,7 +45,7 @@ class ComfyUIService:
         cfg: float = 6.5,
         seed: int | None = None,
         denoise: float = 0.85,
-        timeout: float = 300.0,
+        timeout: float = 600.0,
     ) -> bytes:
         """Run a PhotoMaker hairstyle generation workflow.
 
@@ -219,7 +219,7 @@ class ComfyUIService:
         cfg: float = 6.5,
         denoise: float = 0.85,
         seed: int | None = None,
-        timeout: float = 300.0,
+        timeout: float = 600.0,
     ) -> bytes:
         """Run any pipeline: photomaker, sd15, flux, flux_klein with txt2img or img2img.
 
@@ -466,10 +466,11 @@ class ComfyUIService:
           2: CheckpointLoaderSimple → MODEL, CLIP, VAE
           3: CLIPTextEncode         → positive conditioning
           4: CLIPTextEncode         → negative conditioning
-          5: VAEEncode              → LATENT (from user photo)
-          6: KSampler               → LATENT (with denoise < 1.0)
-          7: VAEDecode              → IMAGE
-          8: SaveImage
+          5: ImageScale             → IMAGE (resized to template dims)
+          6: VAEEncode              → LATENT (from resized photo)
+          7: KSampler               → LATENT (with denoise < 1.0)
+          8: VAEDecode              → IMAGE
+          9: SaveImage
         """
         neg = negative_prompt or "ugly, deformed, bad anatomy, blurry, low quality"
         return {
@@ -490,10 +491,20 @@ class ComfyUIService:
                 "class_type": "CLIPTextEncode",
             },
             "5": {
-                "inputs": {"pixels": ["1", 0], "vae": ["2", 2]},
-                "class_type": "VAEEncode",
+                "inputs": {
+                    "upscale_method": "bilinear",
+                    "width": width,
+                    "height": height,
+                    "crop": "center",
+                    "image": ["1", 0],
+                },
+                "class_type": "ImageScale",
             },
             "6": {
+                "inputs": {"pixels": ["5", 0], "vae": ["2", 2]},
+                "class_type": "VAEEncode",
+            },
+            "7": {
                 "inputs": {
                     "seed": seed,
                     "steps": steps,
@@ -504,16 +515,16 @@ class ComfyUIService:
                     "model": ["2", 0],
                     "positive": ["3", 0],
                     "negative": ["4", 0],
-                    "latent_image": ["5", 0],
+                    "latent_image": ["6", 0],
                 },
                 "class_type": "KSampler",
             },
-            "7": {
-                "inputs": {"samples": ["6", 0], "vae": ["2", 2]},
+            "8": {
+                "inputs": {"samples": ["7", 0], "vae": ["2", 2]},
                 "class_type": "VAEDecode",
             },
-            "8": {
-                "inputs": {"filename_prefix": "sd15_img2img_result", "images": ["7", 0]},
+            "9": {
+                "inputs": {"filename_prefix": "sd15_img2img_result", "images": ["8", 0]},
                 "class_type": "SaveImage",
             },
         }

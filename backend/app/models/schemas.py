@@ -21,7 +21,7 @@ class GenerateRequest(BaseModel):
     method: str = "photomaker"     # photomaker | txt2img | img2img
     checkpoint: str = ""
     denoise: float = 0.85
-    steps: int = 25
+    steps: int = 15
     cfg: float = 6.5
 
 

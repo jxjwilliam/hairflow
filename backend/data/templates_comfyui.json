@@ -385,5 +385,213 @@
     "steps": 25,
     "cfg": 6.5,
     "denoise": 0.85
+  },
+  {
+    "id": "m8",
+    "name": "中分纹理",
+    "category": "men",
+    "tags": [
+      "中发",
+      "纹理",
+      "韩系"
+    ],
+    "face_shapes": [
+      "oval",
+      "round",
+      "diamond"
+    ],
+    "thumbnail": "/static/thumbnails/m8.png",
+    "description": "韩系中分纹理烫",
+    "positive_prompt": "photograph of a man with middle parted textured hairstyle, Korean style center part, soft wavy medium length hair, trendy K-pop look, portrait, Asian man",
+    "negative_prompt": "short hair, messy hair, hat, blurry, low quality",
+    "checkpoint": "photon_v1.safetensors",
+    "photomaker_model": "photomaker-v1.bin",
+    "width": 512,
+    "height": 768,
+    "steps": 25,
+    "cfg": 6.5,
+    "denoise": 0.85
+  },
+  {
+    "id": "m9",
+    "name": "栗子头",
+    "category": "men",
+    "tags": [
+      "超短",
+      "清爽",
+      "韩系"
+    ],
+    "face_shapes": [
+      "oval",
+      "square"
+    ],
+    "thumbnail": "/static/thumbnails/m9.png",
+    "description": "清爽栗子头发型",
+    "positive_prompt": "photograph of a man with Korean chestnut haircut, short rounded top, uniform short length all around, clean neat style, fresh youthful look, portrait, Asian man",
+    "negative_prompt": "long hair, messy hair, bald, hat, blurry, low quality",
+    "checkpoint": "photon_v1.safetensors",
+    "photomaker_model": "photomaker-v1.bin",
+    "width": 512,
+    "height": 768,
+    "steps": 25,
+    "cfg": 6.5,
+    "denoise": 0.75
+  },
+  {
+    "id": "m10",
+    "name": "狼尾",
+    "category": "men",
+    "tags": [
+      "中发",
+      "个性",
+      "潮流"
+    ],
+    "face_shapes": [
+      "oval",
+      "heart",
+      "diamond"
+    ],
+    "thumbnail": "/static/thumbnails/m10.png",
+    "description": "个性狼尾发型",
+    "positive_prompt": "photograph of a man with wolf cut hairstyle, short layered top with longer textured back, messy choppy layers, edgy alternative style, portrait, Asian man",
+    "negative_prompt": "bald, neat hair, hat, blurry, low quality",
+    "checkpoint": "photon_v1.safetensors",
+    "photomaker_model": "photomaker-v1.bin",
+    "width": 512,
+    "height": 768,
+    "steps": 25,
+    "cfg": 6.5,
+    "denoise": 0.85
+  },
+  {
+    "id": "m11",
+    "name": "碎盖",
+    "category": "men",
+    "tags": [
+      "短发",
+      "清爽",
+      "学生"
+    ],
+    "face_shapes": [
+      "oval",
+      "round",
+      "square",
+      "long"
+    ],
+    "thumbnail": "/static/thumbnails/m11.png",
+    "description": "清爽碎盖头发型",
+    "positive_prompt": "photograph of a man with choppy bowl cut hairstyle, short layered cover with straight bangs, clean casual student style, neat textured top, portrait, Asian man",
+    "negative_prompt": "long hair, bald, messy hair, hat, blurry, low quality",
+    "checkpoint": "photon_v1.safetensors",
+    "photomaker_model": "photomaker-v1.bin",
+    "width": 512,
+    "height": 768,
+    "steps": 25,
+    "cfg": 6.5,
+    "denoise": 0.8
+  },
+  {
+    "id": "w9",
+    "name": "气垫烫",
+    "category": "women",
+    "tags": [
+      "中发",
+      "卷发",
+      "韩系"
+    ],
+    "face_shapes": [
+      "oval",
+      "round",
+      "square"
+    ],
+    "thumbnail": "/static/thumbnails/w9.png",
+    "description": "韩式气垫烫",
+    "positive_prompt": "photograph of a woman with air cushion perm hairstyle, soft voluminous waves at shoulder length, Korean style natural looking curls, fluffy轻盈 texture, portrait, Asian woman",
+    "negative_prompt": "straight hair, flat hair, messy hair, wig, blurry, low quality",
+    "checkpoint": "photon_v1.safetensors",
+    "photomaker_model": "photomaker-v1.bin",
+    "width": 512,
+    "height": 768,
+    "steps": 25,
+    "cfg": 6.5,
+    "denoise": 0.85
+  },
+  {
+    "id": "w10",
+    "name": "层次短碎",
+    "category": "women",
+    "tags": [
+      "短发",
+      "层次",
+      "时尚"
+    ],
+    "face_shapes": [
+      "oval",
+      "heart",
+      "diamond"
+    ],
+    "thumbnail": "/static/thumbnails/w10.png",
+    "description": "时尚层次短碎发",
+    "positive_prompt": "photograph of a woman with layered short choppy hairstyle, textured pixie cut with wispy layers, modern trendy short hair, youthful edgy style, portrait, Asian woman",
+    "negative_prompt": "long hair, straight flat hair, messy hair, wig, blurry, low quality",
+    "checkpoint": "photon_v1.safetensors",
+    "photomaker_model": "photomaker-v1.bin",
+    "width": 512,
+    "height": 768,
+    "steps": 25,
+    "cfg": 6.5,
+    "denoise": 0.8
+  },
+  {
+    "id": "w11",
+    "name": "大卷长发",
+    "category": "women",
+    "tags": [
+      "长发",
+      "卷发",
+      "性感"
+    ],
+    "face_shapes": [
+      "oval",
+      "heart",
+      "long"
+    ],
+    "thumbnail": "/static/thumbnails/w11.png",
+    "description": "性感大卷长发",
+    "positive_prompt": "photograph of a woman with long voluminous big curls hairstyle, glamorous Hollywood waves, full-bodied bouncy curly long hair, seductive feminine look, portrait, Asian woman",
+    "negative_prompt": "straight hair, short hair, messy hair, wig, blurry, low quality",
+    "checkpoint": "photon_v1.safetensors",
+    "photomaker_model": "photomaker-v1.bin",
+    "width": 512,
+    "height": 768,
+    "steps": 25,
+    "cfg": 6.5,
+    "denoise": 0.85
+  },
+  {
+    "id": "w12",
+    "name": "挂耳染",
+    "category": "women",
+    "tags": [
+      "中发",
+      "直发",
+      "个性"
+    ],
+    "face_shapes": [
+      "oval",
+      "round",
+      "diamond"
+    ],
+    "thumbnail": "/static/thumbnails/w12.png",
+    "description": "个性挂耳染挑染",
+    "positive_prompt": "photograph of a woman with ear-length bob hairstyle with peek-a-boo colored inner layers, straight sleek medium hair with hidden color streaks, trendy two-tone style, portrait, Asian woman",
+    "negative_prompt": "curly hair, messy hair, wig, blurry, low quality",
+    "checkpoint": "photon_v1.safetensors",
+    "photomaker_model": "photomaker-v1.bin",
+    "width": 512,
+    "height": 768,
+    "steps": 25,
+    "cfg": 6.5,
+    "denoise": 0.8
   }
 ]

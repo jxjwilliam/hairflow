@@ -95,10 +95,14 @@ async function shareImage(url: string) {
       // fall through to clipboard
     }
 
-    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url);
-      Alert.alert('链接已复制', '分享链接已复制到剪贴板（可粘贴给好友）');
-      return;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        Alert.alert('链接已复制', '分享链接已复制到剪贴板（可粘贴给好友）');
+        return;
+      }
+    } catch {
+      // clipboard not available in this environment — fall through
     }
 
     // Last resort: open image in a new tab (does not leave the app tab)

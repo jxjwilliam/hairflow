@@ -1,6 +1,9 @@
 import api from './api';
 import type { GenerateResult, GenerationOptions } from '../types';
 
+// CPU-only: flux_klein img2img takes ~163s, so override the default 60s timeout
+const GENERATE_TIMEOUT = 300_000;
+
 export async function generateHairstyle(
   photoBase64: string,
   styleId: string,
@@ -14,7 +17,7 @@ export async function generateHairstyle(
     denoise: options?.denoise ?? 0.85,
     steps: options?.steps ?? 25,
     cfg: options?.cfg ?? 6.5,
-  });
+  }, { timeout: GENERATE_TIMEOUT });
   return res.data;
 }
 
@@ -27,7 +30,7 @@ export async function regenerateHairstyle(
     photo_base64: photoBase64,
     style_id: styleId,
     params,
-  });
+  }, { timeout: GENERATE_TIMEOUT });
   return res.data;
 }
 
@@ -44,6 +47,6 @@ export async function generateMultiAngle(
     denoise: options?.denoise ?? 0.85,
     steps: options?.steps ?? 25,
     cfg: options?.cfg ?? 6.5,
-  });
+  }, { timeout: GENERATE_TIMEOUT });
   return res.data;
 }

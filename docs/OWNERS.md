@@ -1,4 +1,4 @@
-/*
+
 | 文件路径 | 当前 Owner | 工具 | 状态 | 开始时间 | 预计完成 |
 |----------|-----------|------|------|----------|----------|
 | docs/ds_spec.md | deepseek | DeepSeek | completed | — | — |
@@ -18,4 +18,4 @@
 | backend/app/main.py | deepseek | DeepSeek | completed | 2026-07-17 | — |
 | backend/requirements.txt | deepseek | DeepSeek | completed | 2026-07-17 | — |
 | .gitignore | deepseek | DeepSeek | completed | — | — |
-*/
+

@@ -4,7 +4,8 @@
 
 > 个人开发者业余项目 · MVP 阶段  
 > **App 名称：** 发型试戴  
-> **当前 AI 后端：本地 ComfyUI 多管线**（PhotoMaker v1 / SD1.5 / FLUX.1 Schnell / FLUX.2 Klein 4B；美图 API 代码保留为遗留路径，App 默认不再调用）
+> **当前 AI 后端：本地 ComfyUI 多管线**（PhotoMaker v1 / SD1.5 / FLUX.2 Klein 4B；美图 API 代码保留为遗留路径，App 默认不再调用）  
+> **开发环境：** macOS (CPU-only) — FLUX.1 Schnell 12GB GGUF 无法加载，FLUX.2 Klein txt2img 8GB CLIP OOM，因此前端只展示 CPU 可行组合
 
 ---
 
@@ -14,7 +15,7 @@
 |------|------|
 | 发型模板浏览（响应式网格 + 男女分类 + catalog 缩略图） | ✅ |
 | 拍照 / 相册上传头像 | ✅ |
-| AI 生成发型效果图（本地 ComfyUI，4 条管线可选） | ✅ |
+| AI 生成发型效果图（本地 ComfyUI，3 条管线可选） | ✅ |
 | 生成选项页：模型 / 文生图·图生图 / 变化程度 / 步数 | ✅ |
 | FLUX.2 Klein 原生编辑工作流（ReferenceLatent，保留自拍人脸特征） | ✅ |
 | 效果图预览（保存 / 分享 / 重试） | ✅ |
@@ -60,14 +61,14 @@ backend/  (Python FastAPI + SQLite via SQLAlchemy async)
 
 ### 生成管线（`pipeline` 字段）
 
-| pipeline | 模型文件 | 特点 |
-|----------|----------|------|
-| `photomaker` | `photon_v1.safetensors` + `photomaker-v1.bin` | SD1.5 + 人脸嵌入，保脸最自然（默认） |
-| `sd15` | `realisticVisionV60B1_v60B1VAE.safetensors` | SD1.5 真实风格 txt2img / img2img |
-| `flux` | `flux1-schnell-Q8_0.gguf` + `clip_l` + `t5xxl_fp16` + `ae.safetensors` | FLUX.1 Schnell，最快 |
-| `flux_klein` | `flux-2-klein-4b-Q8_0.gguf` + `qwen_3_4b.safetensors` + `flux2-vae.safetensors` | FLUX.2 Klein 4B（GGUF，需 ComfyUI-GGUF 节点） |
+| pipeline | 模型文件 | 特点 | CPU 可行性 |
+|----------|----------|------|-----------|
+| `photomaker` | `photon_v1.safetensors` + `photomaker-v1.bin` | SD1.5 + 人脸嵌入，保脸最自然（默认） | ✅ 35-52s |
+| `sd15` | `realisticVisionV60B1_v60B1VAE.safetensors` | SD1.5 真实风格 txt2img / img2img | ✅ 23-48s |
+| `flux_klein` | `flux-2-klein-4b-Q8_0.gguf` + `qwen_3_4b.safetensors` + `flux2-vae.safetensors` | FLUX.2 Klein 4B（GGUF，需 ComfyUI-GGUF 节点） | ✅ img2img 157-163s；❌ txt2img OOM（8GB CLIP） |
+| ~~`flux`~~ | ~~`flux1-schnell-Q8_0.gguf` + `clip_l` + `t5xxl_fp16` + `ae.safetensors`~~ | ~~FLUX.1 Schnell~~ | ❌ 已移除（12GB 模型，CPU 无法运行） |
 
-- `method`：`photomaker`（保脸）/ `txt2img` / `img2img`
+- `method`：`photomaker`（保脸）/ `txt2img` / `img2img` — `flux_klein` 在前端仅展示 img2img
 - **flux_klein + img2img 走原生编辑工作流**（官方 "Image Edit (Flux.2 Klein 4B Distilled)" 模板）：
   `CLIPLoader(type="flux2")` 单编码器 + 自拍经 `VAEEncode` 注入 `ReferenceLatent`（正/负条件均注入）
   + `CFGGuider(cfg=1.0)` + `euler` + `Flux2Scheduler` + `SamplerCustomAdvanced`。
@@ -75,6 +76,7 @@ backend/  (Python FastAPI + SQLite via SQLAlchemy async)
   提示词自动包装为编辑指令（"保持脸部/表情/肤色/背景/光线不变，只换发型"）。
 - 模板 JSON 里的 SD1.5 `checkpoint` 不会泄漏进 flux 管线（非 `.gguf` 覆盖值会被忽略并回退默认）。
 - ComfyUI 400 校验错误会被完整记录并透传到 502 响应（`node_errors` 详情），便于定位缺失模型。
+- **SD1.5 img2img 修复**：`_build_sd15_img2img_workflow` 插入了 `ImageScale(bilinear)` 节点，将用户照片缩放到模板尺寸后再 VAEEncode → KSampler，避免加载全分辨率照片（1536×2730）导致 10× 耗时；生成时间从 >600s 降至 23-48s。
 
 ### 生成结果在哪里？
 
@@ -93,6 +95,8 @@ backend/  (Python FastAPI + SQLite via SQLAlchemy async)
 - Session：保留上次照片，换发型可跳过重新上传
 - 登录：JWT 存 AsyncStorage，axios 拦截器自动带 `Authorization: Bearer`
 - 品牌资源：`mobile/assets/`（icon / favicon / logo）+ `mobile/public/`（Web 静态）
+- **生成超时**：默认 axios 60s → `generation.ts` 覆盖为 **300s** 以适配 flux_klein（163s）
+- **失败导航**：预览页生成失败时显示"返回生成选项"按钮，回到 options 页保留参数，而非仅返回首页
 
 **页面流：** 发型库 → 上传照片 → 生成选项（模型/方式/参数）→ AI 生成预览（参数调整 / 多角度 / 原图对比）→ 效果历史（含参数 metadata）
 
@@ -125,12 +129,12 @@ hairstyle/
 │   │   ├── preview.tsx          # 生成预览（参数调整/多角度/原图对比）
 │   │   ├── result-view.tsx      # 历史详情 + 生成参数 metadata 卡片
 │   │   ├── recharge.tsx         # 点数充值（mock 支付）
-│   │   ├── membership.tsx       # 会员中心
+│   │   ├── membership.tsx       # 会员中心（等级查看/升级）
 │   │   ├── +html.tsx            # Web title / favicon
 │   │   └── _layout.tsx
 │   ├── assets/                  # icon、favicon、logo、splash
 │   ├── public/                  # Web 静态 favicon.ico 等
-│   ├── components/              # ParamPanel / AngleSelector / BeforeAfterSlider / …
+│   ├── components/              # ParamPanel / AngleSelector / BeforeAfterSlider / ResultView / ActionButtons / FocusedScreen
 │   ├── constants/theme.ts       # 设计 token
 │   ├── context/SessionContext.tsx
 │   ├── hooks/useLayout.ts       # 响应式列数
@@ -151,11 +155,13 @@ hairstyle/
 │   │   ├── dependencies.py      # get_current_user（JWT）
 │   │   └── config.py            # pydantic-settings（.env）
 │   ├── data/templates_comfyui.json
-│   ├── workflows/               # ComfyUI 可拖入 JSON
+│   ├── static/workflows/        # ComfyUI 可拖入 JSON（供手动调试）
+│   ├── tests/                   # 后端测试（pytest）
 │   ├── scripts/                 # generate_thumbnails.py / test_comfyui.py / convert_api_to_workflow.py
 │   ├── static/thumbnails/       # catalog 预览
 │   ├── output/                  # 生成结果
 │   └── hairstyle.db             # SQLite（用户/订单/点数流水）
+├── Makefile                   # 开发命令（make init/start/stop/test/…）
 ├── docs/
 ├── README.md
 └── AGENTS.md
@@ -165,6 +171,21 @@ hairstyle/
 
 ## 快速开始
 
+本项目提供 `Makefile` 快速命令（推荐），也支持手动启动。
+
+```bash
+make init       # 安装后端 + 前端依赖
+make start      # 启动后端 + 前端
+make stop       # 停止所有服务
+make check      # 健康检查（ComfyUI / 后端 / 前端）
+make test       # 运行后端测试
+make logs       # 查看后端日志
+make thumbnails # 重新生成 catalog 缩略图
+make db-reset   # 删除并重建 SQLite 数据库
+```
+
+详见 [`Makefile`](Makefile) 所有命令。
+
 ### 前置条件
 
 - Node.js 20+ / npm
@@ -173,7 +194,7 @@ hairstyle/
 - **本机 ComfyUI**（推荐 Pinokio），`http://127.0.0.1:8188`
   - PhotoMaker 路径：`photon_v1.safetensors` + `photomaker-v1.bin`（**不要用 v2**）
   - FLUX.2 Klein 路径（可选）：`flux-2-klein-4b-Q8_0.gguf` + `qwen_3_4b.safetensors` + `flux2-vae.safetensors`，需 ComfyUI-GGUF 自定义节点
-- 详见 [`docs/ds_comfyui_setup.md`](docs/ds_comfyui_setup.md)、[`backend/workflows/README.md`](backend/workflows/README.md)
+- 详见 [`docs/ds_comfyui_setup.md`](docs/ds_comfyui_setup.md)、[`backend/static/workflows/README.md`](backend/static/workflows/README.md)
 
 ### 1. ComfyUI
 
@@ -214,7 +235,21 @@ python scripts/generate_thumbnails.py
 python scripts/generate_thumbnails.py --id m1 --force --seed 42
 ```
 
+### 运行测试
+
+```bash
+cd backend
+PYTHONPATH=. python -m pytest tests/ -v
+```
+
+或通过 Makefile：
+```bash
+make test
+```
+
 ---
+
+
 
 ## 环境变量
 
@@ -270,7 +305,8 @@ python scripts/generate_thumbnails.py --id m1 --force --seed 42
 
 - **P1（已完成）：** 发型参数滑条、多视角、原图对比、登录、点数、mock 充值、会员等级
 - **P1（待办）：** 真实短信通道、真实微信/支付宝支付
-- **P2：** 云端生成历史、收藏、工作流升级（HairPort / ACE++）
+- **P2（已完成）：** 脸型适配推荐（`POST /api/recommend/by-photo`）、多级会员（Pro / Premium）
+- **P2（待办）：** 云端生成历史、收藏、工作流升级（HairPort / ACE++）
 
 ---
 
@@ -284,7 +320,8 @@ python scripts/generate_thumbnails.py --id m1 --force --seed 42
 | [`docs/ds_comfyui_proposal.md`](docs/ds_comfyui_proposal.md) | ComfyUI 方案说明 |
 | [`docs/features-implementation.md`](docs/features-implementation.md) | P1 功能实现方案（登录/点数/参数/多角度） |
 | [`docs/oc_p2-implementation.md`](docs/oc_p2-implementation.md) | P2 脸型推荐 + 会员实现 |
-| [`backend/workflows/README.md`](backend/workflows/README.md) | Workflow 使用 |
+| [`docs/oc_p2-face-shape-membership.md`](docs/oc_p2-face-shape-membership.md) | P2 设计方案（面部推荐 + 多级会员） |
+| [`backend/static/workflows/README.md`](backend/static/workflows/README.md) | Workflow 使用 |
 | [`docs/superpowers/specs/2026-07-17-comfyui-catalog-thumbnails-design.md`](docs/superpowers/specs/2026-07-17-comfyui-catalog-thumbnails-design.md) | Catalog 缩略图设计 |
 
 ---

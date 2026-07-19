@@ -11,8 +11,7 @@ type MethodOption = GenerationOptions['method'];
 const PIPELINES: { value: PipelineOption; label: string; desc: string }[] = [
   { value: 'photomaker', label: 'PhotoMaker v1', desc: 'SD1.5 保持人脸特征，生成最自然' },
   { value: 'sd15', label: 'Realistic Vision', desc: 'SD1.5 真实风格，脸型可能变化' },
-  { value: 'flux', label: 'FLUX.1 Schnell', desc: '最快生成，风格化效果' },
-  { value: 'flux_klein', label: 'FLUX.2 Klein 4B', desc: '最新模型，细节丰富' },
+  { value: 'flux_klein', label: 'FLUX.2 Klein 4B', desc: '最新模型，细节丰富（仅图生图）' },
 ];
 
 const METHODS: { value: MethodOption; label: string; desc: string }[] = [
@@ -118,7 +117,7 @@ export default function OptionsScreen() {
         {!canUsePhotoMaker && (
           <>
             <Text style={styles.sectionLabel}>生成方式</Text>
-            {METHODS.filter((m) => m.value !== 'photomaker').map((m) => (
+            {METHODS.filter((m) => m.value !== 'photomaker' && !(pipeline === 'flux_klein' && m.value === 'txt2img')).map((m) => (
               <TouchableOpacity
                 key={m.value}
                 style={[

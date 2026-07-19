@@ -74,41 +74,69 @@
 申请时间：2026-07-17 00:48:25
 ```
 
-## 当前状态（2026-07-17）
+## 当前状态（2026-07-18）
 
-### 已切换：本地 ComfyUI（主路径）
+### 本地 ComfyUI 多管线（主路径）
 
-因美图 `portrait_edit` 无权限（`GATEWAY_AUTHORIZED_ERROR`），生成链路已切到本机 **ComfyUI + PhotoMaker v1**：
+因美图 `portrait_edit` 无权限（`GATEWAY_AUTHORIZED_ERROR`），生成链路已完全切换为本机 **ComfyUI 多管线**：
 
 | 项 | 现状 |
 |----|------|
-| App 生成 API | `POST /api/comfyui/generate` |
-| 模板数据 | `backend/data/templates_comfyui.json` |
+| App 生成 API | `POST /api/comfyui/generate`（`pipeline`/`method` 分发） |
+| 模板数据 | `backend/data/templates_comfyui.json`（15 套种子模板，含 `face_shapes` 字段） |
 | 人脸检测 | MediaPipe（本地） |
-| 结果存储 | `backend/output/`（开发） |
-| 模板缩略图 | `backend/static/thumbnails/` + `scripts/generate_thumbnails.py` |
+| 脸型分析 | MediaPipe Face Mesh 468 点 → 椭圆/圆/方/心形/菱形/长脸 |
+| 结果存储 | `backend/output/`（开发期；可选 OSS） |
+| 模板缩略图 | `backend/static/thumbnails/` + `scripts/generate_thumbnails.py`（txt2img 批生成） |
+| 数据库 | SQLite `hairstyle.db`（用户/订单/点数流水/会员） |
 | 美图 `/api/generate` | 代码保留，前端未使用 |
 
 详见：`README.md`、`docs/ds_comfyui_setup.md`、`docs/ds_comfyui_proposal.md`。
 
-### 更新（2026-07-17 晚）：多管线 + 保脸修复 + 参数 metadata
+### 已上线功能（截至 2026-07-18）
 
-**生成管线**：`pipeline` 字段支持 `photomaker`（默认）/ `sd15` / `flux` / `flux_klein`，前端「生成选项」可选模型、文生图/图生图、变化程度、步数。
+**P1 全部完成：**
 
-**FLUX.2 Klein 保脸修复**：img2img 从通用高 denoise 重采样（丢脸、"模特脸"）改为**官方原生编辑工作流**（`CLIPLoader type="flux2"` + `ReferenceLatent` 注入自拍参考 + `CFGGuider 1.0` + `euler` + `Flux2Scheduler` 4 步），只换发型、保留脸部特征。提示词自动包装为编辑指令。详见 `docs/oc_flux2_klein_integration.md`。
+| 功能 | 说明 |
+|------|------|
+| 多管线生成 | `photomaker`（默认，保脸）/ `sd15`（txt2img/img2img）/ `flux_klein`（原生编辑保脸） |
+| FLUX.2 Klein 原生编辑 | `ReferenceLatent` 注入自拍参考，只换发型保留脸部特征 |
+| 发型参数调整 | `POST /api/comfyui/regenerate`（length/curl/color → prompt_builder → 重新生成） |
+| 多角度生成 | `POST /api/comfyui/generate-multi`（正/左/右/后 4 角度串行） |
+| 原图对比 | `BeforeAfterSlider.tsx` 滑块 |
+| 效果图参数 metadata | `pipeline/method/denoise/steps/cfg` 随历史存入本机，详情页展示参数卡片 |
+| 账号体系 | 手机号 + 万能码 `888888` 登录（JWT） |
+| 点数系统 | 余额/扣点/流水；`SKIP_POINTS_CHECK=true` 开发豁免 |
+| mock 充值 | 套餐列表 + 下单 + mock 支付回调 |
+| SD1.5 img2img 优化 | `ImageScale` 防止全分辨率照片 10× 耗时（1536×2730→23-48s） |
 
-**当日修复的 bug**：
+**P2 已完成：**
+
+| 功能 | 说明 |
+|------|------|
+| 脸型适配推荐 | `POST /api/recommend/by-photo` — MediaPipe Face Mesh 脸型检测 + `face_shapes` 模板匹配 |
+| 多级会员 | 3 级（Free / Pro / Premium），mock 升级，有效期 30 天，每日免费额度、点数上限、点数折扣 |
+
+**待办：**
+
+| 功能 | 优先级 |
+|------|--------|
+| 真实短信通道 | P1 |
+| 真实微信/支付宝支付 | P1 |
+| 云端生成历史、收藏 | P2 |
+| 工作流升级（HairPort / ACE++） | P2 |
+
+### Bug / 边界
 - Web 上传 RGBA PNG → `crop_face` JPEG 报错（已加 `convert("RGB")`）
-- ComfyUI 400 错误被吞 → 现在 `node_errors` 详情透传到 502 响应
+- ComfyUI 400 错误透传（`node_errors` 详情写入 502 响应）
 - 模板 SD1.5 checkpoint 泄漏进 flux 管线当 UNET → 非 `.gguf` 覆盖值被忽略
-- `qwen_3_4b.safetensors` 在 Pinokio 共享盘扫不到 → 已复制进 ComfyUI 应用 `models/text_encoders/`
+- `qwen_3_4b.safetensors` 在 Pinokio 共享盘扫不到 → 需复制进 ComfyUI 应用 `models/text_encoders/`
 - 选 FLUX 时步数默认 25（蒸馏模型会烤糊）→ 默认 4
+- flux_klein + img2img 对 CPU 环境约 157-163s/张；M3 Pro GPU 约 131s/张
 
-**效果图参数 metadata**：每次生成的 `pipeline/method/denoise/steps/cfg` 随历史存入本机（`history.ts`），「效果」详情页展示参数卡片。
-
-**账号体系**：手机号 + 万能码 `888888` 登录（JWT）、点数（`SKIP_POINTS_CHECK=true` 开发豁免）、mock 充值、会员等级、脸型推荐均已上线（SQLite `hairstyle.db`）。
-
-**测试**：`backend/tests/` 20 项全绿（含上述回归）；flux_klein img2img 对本机 ComfyUI 端到端实测通过（M3 Pro 约 131s/张）。
+### 测试
+- `backend/tests/test_comfyui_bugfixes.py` 7 项回归测试，`pytest -v` 全绿
+- flux_klein img2img 对本机 ComfyUI 端到端实测通过
 
 ### 历史问题（2026-07-16，已绕过）
 

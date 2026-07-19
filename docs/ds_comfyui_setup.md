@@ -1,7 +1,8 @@
 # ComfyUI 发型合成 — 模型与 Workflow 准备
 
 > **状态**: v1 模型已确认可行 | v2 架构不兼容  
-> **日期**: 2026-07-17
+> **日期**: 2026-07-17 (2026-07-18 补充 CPU 约束说明)  
+> **开发环境**：macOS CPU-only (2.2GB 可用 RAM) — FLUX.1 Schnell (12GB GGUF) 无法加载，FLUX.2 Klein txt2img (8GB CLIP) OOM。前端 options 已移除不可用选项。
 
 ---
 
@@ -132,7 +133,7 @@ python3 scripts/generate_thumbnails.py
 python3 scripts/generate_thumbnails.py --id m1 --force --seed 42
 ```
 
-Workflow 说明见 `backend/workflows/README.md`。
+Workflow 说明见 `backend/static/workflows/README.md`。
 
 ---
 
@@ -143,7 +144,7 @@ Workflow 说明见 `backend/workflows/README.md`。
 | pipeline | 模型文件（ComfyUI `models/` 下） | 说明 |
 |----------|------|------|
 | `sd15` | `realisticVisionV60B1_v60B1VAE.safetensors`（checkpoints） | SD1.5 真实风格 |
-| `flux` | `flux1-schnell-Q8_0.gguf`（unet）+ `clip_l.safetensors` + `t5xxl_fp16.safetensors`（clip）+ `ae.safetensors`（vae） | FLUX.1 Schnell，最快 |
+| `flux` | `flux1-schnell-Q8_0.gguf`（unet）+ `clip_l.safetensors` + `t5xxl_fp16.safetensors`（clip）+ `ae.safetensors`（vae） | FLUX.1 Schnell（最快，但 12GB 模型 CPU 环境无法加载，已从前端隐藏） |
 | `flux_klein` | `flux-2-klein-4b-Q8_0.gguf`（unet）+ `qwen_3_4b.safetensors`（text_encoders）+ `flux2-vae.safetensors`（vae） | FLUX.2 Klein 4B，细节最好 |
 
 **前置**：GGUF 加载需要 [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF) 自定义节点（`UnetLoaderGGUF` / `DualCLIPLoaderGGUF`）。

@@ -189,14 +189,24 @@ export default function PreviewScreen() {
         <View style={styles.errorBox}>
           <Text style={styles.errorTitle}>生成失败</Text>
           <Text style={styles.errorHint}>请确认后端与 ComfyUI 已启动</Text>
-          <TouchableOpacity
-            style={styles.retryBtn}
-            onPress={() => generateMutation.mutate()}
-            accessibilityRole="button"
-            accessibilityLabel="重新生成"
-          >
-            <Text style={styles.retryText}>重新生成</Text>
-          </TouchableOpacity>
+          <View style={styles.errorActions}>
+            <TouchableOpacity
+              style={styles.retryBtn}
+              onPress={() => generateMutation.mutate()}
+              accessibilityRole="button"
+              accessibilityLabel="重新生成"
+            >
+              <Text style={styles.retryText}>重新生成</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.optionsBtn}
+              onPress={() => router.replace({ pathname: '/options', params: { templateId, templateName, photoBase64 } })}
+              accessibilityRole="button"
+              accessibilityLabel="返回生成选项"
+            >
+              <Text style={styles.optionsBtnText}>返回生成选项</Text>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity
             style={styles.homeLink}
             onPress={() => router.replace('/')}
@@ -248,14 +258,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.md,
   },
+  errorActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
   retryBtn: {
     backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
-    marginTop: spacing.sm,
   },
   retryText: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  optionsBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+  },
+  optionsBtnText: { color: colors.primary, fontWeight: '600', fontSize: 15 },
   homeLink: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
   homeLinkText: { color: colors.primary, fontWeight: '600', fontSize: 14 },
 });
