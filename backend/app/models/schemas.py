@@ -43,6 +43,7 @@ class RegenerateRequest(BaseModel):
     steps: Optional[int] = None
     cfg: Optional[float] = None
     denoise: Optional[float] = None
+    checkpoint: str = ""
 
 
 class AngleImage(BaseModel):
