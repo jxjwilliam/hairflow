@@ -4,6 +4,10 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     comfyui_url: str = "http://127.0.0.1:8188"
 
+    # Short video (image-to-video)
+    default_video_pipeline: str = "ltx"
+    video_timeout_seconds: float = 900.0
+
     # Database
     database_url: str = "sqlite+aiosqlite:///./hairstyle.db"
 

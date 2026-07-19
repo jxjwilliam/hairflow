@@ -1,4 +1,6 @@
 import asyncio
+import base64
+import io
 import json
 import logging
 import uuid
@@ -6,6 +8,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
+from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -14,12 +17,15 @@ from app.dependencies import get_current_user
 from app.models.schemas import (
     GenerateRequest,
     GenerateResponse,
+    GenerateVideoRequest,
+    GenerateVideoResponse,
     RegenerateRequest,
     MultiAngleResponse,
     AngleImage,
 )
 from app.models.user import User
 from app.services.comfyui import comfyui_service, ComfyUIError
+from app.services.video_generation import video_generation_service
 from app.services.face import face_service
 from app.services.membership_service import membership_service
 from app.services.prompt_builder import build_adjusted_prompt
@@ -51,11 +57,97 @@ def _save_locally(image_bytes: bytes, base_url: str = "http://localhost:8000") -
 
 @router.get("/output/{filename}")
 async def serve_output(filename: str):
-    """Serve generated images from local output/ directory."""
+    """Serve generated images and videos from local output/ directory."""
     filepath = OUTPUT_DIR / filename
     if not filepath.exists():
-        raise HTTPException(status_code=404, detail="Image not found")
-    return FileResponse(filepath, media_type="image/png")
+        raise HTTPException(status_code=404, detail="File not found")
+    media_type = "video/mp4" if filepath.suffix.lower() == ".mp4" else "image/png"
+    return FileResponse(filepath, media_type=media_type)
+
+
+def _resolve_still_bytes(req: GenerateVideoRequest) -> bytes:
+    """Resolve the generated still referenced by a video request."""
+    if req.image_id:
+        path = OUTPUT_DIR / f"{req.image_id}.png"
+        if not path.exists():
+            path = OUTPUT_DIR / req.image_id
+        if not path.exists():
+            raise HTTPException(400, detail=f"Still not found for image_id={req.image_id}")
+        return path.read_bytes()
+
+    if req.image_url:
+        filename = req.image_url.rstrip("/").split("/")[-1].split("?", 1)[0]
+        path = OUTPUT_DIR / filename
+        if not path.exists():
+            raise HTTPException(
+                400, detail="image_url must point to a local /api/comfyui/output/ file"
+            )
+        return path.read_bytes()
+
+    try:
+        return base64.b64decode(req.photo_base64.split(",", 1)[-1], validate=True)
+    except (ValueError, AttributeError) as exc:
+        raise HTTPException(400, detail="photo_base64 is not valid base64") from exc
+
+
+def _save_video_locally(
+    video_bytes: bytes, base_url: str = "http://localhost:8000"
+) -> tuple[str, str]:
+    """Save an MP4 result and return its public URL and identifier."""
+    video_id = uuid.uuid4().hex
+    filename = f"{video_id}.mp4"
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    (OUTPUT_DIR / filename).write_bytes(video_bytes)
+    return f"{base_url}/api/comfyui/output/{filename}", video_id
+
+
+@router.post("/generate-video", response_model=GenerateVideoResponse)
+async def comfyui_generate_video(
+    req: GenerateVideoRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    user: User | None = Depends(get_current_user),
+):
+    """Animate one completed hairstyle still through the selected video pipeline."""
+    pipeline = (req.pipeline or settings.default_video_pipeline).lower()
+    if pipeline not in ("ltx", "hunyuan", "animatediff"):
+        raise HTTPException(400, detail=f"Unknown pipeline: {pipeline}")
+
+    if not settings.skip_points_check and user is not None:
+        quota_ok = await membership_service.check_generation_quota(user)
+        if not quota_ok:
+            raise HTTPException(403, detail="已达每日生成上限，升级会员可增加次数")
+
+    try:
+        image = Image.open(io.BytesIO(_resolve_still_bytes(req))).convert("RGB")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(400, detail="Still image could not be decoded") from exc
+
+    seed = req.seed if req.seed is not None else int(uuid.uuid4().hex[:8], 16)
+    try:
+        video_bytes = await video_generation_service.generate_video(
+            pipeline=pipeline,
+            image=image,
+            seed=seed,
+            frames=req.frames,
+            fps=req.fps,
+        )
+    except ComfyUIError as exc:
+        logger.error("ComfyUI video generation failed: %s", exc)
+        raise HTTPException(502, detail=f"AI video generation failed: {exc}") from exc
+
+    base_url = str(request.base_url).rstrip("/")
+    video_url, video_id = _save_video_locally(video_bytes, base_url)
+    if not settings.skip_points_check and user is not None:
+        await membership_service.record_generation(session, user)
+    return GenerateVideoResponse(
+        video_url=video_url,
+        video_id=video_id,
+        pipeline=pipeline,
+        duration_s=req.frames / float(req.fps),
+    )
 
 
 @router.post("/generate", response_model=GenerateResponse)

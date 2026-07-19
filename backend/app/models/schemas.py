@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from typing import Optional
 
 
@@ -54,4 +54,34 @@ class AngleImage(BaseModel):
 class MultiAngleResponse(BaseModel):
     images: dict[str, AngleImage]
     template_name: str = ""
+
+
+class GenerateVideoRequest(BaseModel):
+    """Animate an existing try-on still; exactly one image source is required."""
+
+    image_id: Optional[str] = None
+    image_url: Optional[str] = None
+    photo_base64: Optional[str] = None
+    pipeline: Optional[str] = None
+    seed: Optional[int] = None
+    frames: int = 24
+    fps: int = 8
+
+    @model_validator(mode="after")
+    def one_source(self) -> "GenerateVideoRequest":
+        sources = [self.image_id, self.image_url, self.photo_base64]
+        if sum(1 for source in sources if source) != 1:
+            raise ValueError("Provide exactly one of image_id, image_url, photo_base64")
+        if not 8 <= self.frames <= 48:
+            raise ValueError("frames must be 8–48 for ~1–6s clips")
+        if not 6 <= self.fps <= 24:
+            raise ValueError("fps must be 6–24")
+        return self
+
+
+class GenerateVideoResponse(BaseModel):
+    video_url: str
+    video_id: str
+    pipeline: str
+    duration_s: float
 

@@ -42,20 +42,43 @@ Script: [`backend/scripts/discover_video_nodes.py`](../backend/scripts/discover_
 | Item | Result |
 |------|--------|
 | ComfyUI URL | `http://127.0.0.1:8188` |
-| Reachable | **No** — connection refused on `/object_info` |
-| `make discover-video-nodes` | Exit 1 (`FAIL: cannot reach ComfyUI object_info`) |
-| Catalog on disk | Placeholder with empty matches until ComfyUI is up |
+| Reachable | **Yes** — live `/object_info` was queried |
+| Catalog on disk | `backend/data/video_node_catalog.json` is the frozen live inventory |
 
 **Action:** Start Pinokio ComfyUI (see [`docs/ds_comfyui_setup.md`](ds_comfyui_setup.md)), then re-run `make discover-video-nodes` to replace the placeholder catalog.
 
-### Matched class_types (placeholder — re-run discovery)
+### LTX graph
+
+`backend/static/workflows/ltx_i2v_hairstyle.json` is an API-format graph using:
+
+`LoadImage` → `ImageScale` → `UNETLoader` (`ltx-video-2b-v0.9.5.safetensors`) +
+`CLIPLoader` (`t5xxl_fp16.safetensors`, `ltxv`) + `VAELoader` →
+`CLIPTextEncode` → `LTXVConditioning` → `LTXVImgToVideo` →
+`ModelSamplingLTXV` / `LTXVScheduler` / `SamplerCustomAdvanced` →
+`VAEDecode` → `CreateVideo` → `SaveVideo`.
+
+The graph uses 512×768, a requested 24 frames plus the required initial still
+(25 latent frames), and 8 fps. A live `/prompt` validation on 2026-07-19
+accepted the graph (`fbf16ad4-b051-477d-978d-fb3119307a9b`); completion was
+not awaited because local jobs must remain sequential.
+
+### Hunyuan graph
+
+`backend/static/workflows/hunyuan_i2v_hairstyle.json` uses `UNETLoader`,
+`DualCLIPLoader` (`hunyuan_video`), `VAELoader`,
+`CLIPTextEncodeHunyuanDiT`, `HunyuanImageToVideo`, `KSampler`,
+`VAEDecode`, `CreateVideo`, and `SaveVideo`, with the existing Hunyuan fp8
+UNET and bf16 VAE. Its live `/prompt` validation was accepted
+(`adfdc7a7-40bf-4f0c-94c0-da44a2fc0c80`); generation was not awaited.
+
+### Matched class_types
 
 | Pipeline | Keywords | Matched nodes | Status |
 |----------|----------|---------------|--------|
-| **ltx** | `ltx`, `ltxv` | *(none — ComfyUI down)* | missing |
-| **hunyuan** | `hunyuan` | *(none — ComfyUI down)* | missing |
-| **animatediff** | `animatediff`, `animate_diff`, `ad_` | *(none — ComfyUI down)* | missing |
-| **video_io** | `vhs_`, `videocombine`, `savevideo`, `createvideo` | *(none — ComfyUI down)* | missing |
+| **ltx** | `ltx`, `ltxv` | `LTXVImgToVideo`, `LTXVConditioning`, `LTXVScheduler` (+ more) | available |
+| **hunyuan** | `hunyuan` | `HunyuanImageToVideo`, `TextEncodeHunyuanVideo_ImageToVideo` (+ more) | available |
+| **animatediff** | `animatediff`, `animate_diff`, `ad_` | *(none until ComfyUI restarts)* | install pending restart |
+| **video_io** | `vhs_`, `videocombine`, `savevideo`, `createvideo` | `CreateVideo`, `SaveVideo` | available |
 
 After a successful run, update this table from `video_node_catalog.json`.
 
@@ -63,12 +86,15 @@ After a successful run, update this table from `video_node_catalog.json`.
 
 AnimateDiff custom nodes are **not** expected on this Pinokio ComfyUI build today. If discovery shows zero matches for `animatediff`:
 
-1. Open ComfyUI → **Manager** → Install Custom Nodes
-2. Search and install **ComfyUI-AnimateDiff-Evolved** (or the official AnimateDiff pack)
-3. Restart ComfyUI
-4. Re-run `make discover-video-nodes`
-
-Motion module weights are TBD after install (Task 5).
+1. `ComfyUI-AnimateDiff-Evolved` was cloned to
+   `/Users/william.jiang/Samsung/pinokio/api/comfy.git/app/custom_nodes/ComfyUI-AnimateDiff-Evolved`
+   at commit `2a12eaa`.
+2. Restart Pinokio ComfyUI so it loads the extension.
+3. Install an SD1.5 motion module such as `v3_sd15_mm.ckpt` in the extension's
+   documented AnimateDiff model path.
+4. Re-run `make discover-video-nodes`; only then can the placeholder
+   `animatediff_i2v_hairstyle.json` be exercised. It intentionally references
+   `realisticVisionV60B1_v60B1VAE.safetensors`.
 
 ### Model inventory (on disk)
 

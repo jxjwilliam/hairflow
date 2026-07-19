@@ -1,0 +1,12 @@
+{
+  "1": {"class_type": "LoadImage", "inputs": {"image": "__IMAGE_FILENAME__"}},
+  "2": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": "realisticVisionV60B1_v60B1VAE.safetensors"}},
+  "3": {"class_type": "ADE_AnimateDiffLoaderWithContext", "inputs": {"model": ["2", 0], "motion_model": "v3_sd15_mm.ckpt"}},
+  "4": {"class_type": "VAEEncode", "inputs": {"pixels": ["1", 0], "vae": ["2", 2]}},
+  "5": {"class_type": "KSampler", "inputs": {"model": ["3", 0], "seed": "__SEED__", "steps": 20, "cfg": 6.0, "sampler_name": "euler_ancestral", "scheduler": "normal", "positive": ["6", 0], "negative": ["7", 0], "latent_image": ["4", 0], "denoise": 0.55}},
+  "6": {"class_type": "CLIPTextEncode", "inputs": {"text": "subtle natural hair movement, soft head turn, cinematic portrait, keep face identity, keep hairstyle", "clip": ["2", 1]}},
+  "7": {"class_type": "CLIPTextEncode", "inputs": {"text": "morphing face, identity change, flicker, watermark, text", "clip": ["2", 1]}},
+  "8": {"class_type": "VAEDecode", "inputs": {"samples": ["5", 0], "vae": ["2", 2]}},
+  "9": {"class_type": "CreateVideo", "inputs": {"images": ["8", 0], "fps": "__FPS__"}},
+  "10": {"class_type": "SaveVideo", "inputs": {"video": ["9", 0], "filename_prefix": "hairflow/animatediff", "format": "mp4", "codec": "h264"}}
+}
