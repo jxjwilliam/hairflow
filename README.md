@@ -24,6 +24,7 @@
 | 多角度生成（正 / 左 / 右 / 后 4 角度） | ✅ |
 | 发型参数调整（长度 / 卷曲 / 颜色 → prompt 重新生成） | ✅ |
 | 原图对比（Before/After 滑块） | ✅ |
+| 短视频生成（LTX 默认；预览页播放 MP4） | ✅ |
 | 用户登录（手机号 + 开发万能验证码 `888888`；微信/支付宝为 stub） | ✅ |
 | 点数系统（余额 / 扣点 / 流水；开发期 `SKIP_POINTS_CHECK=true` 豁免） | ✅ |
 | 充值（套餐 + mock 支付回调） | ✅ |
@@ -46,6 +47,7 @@ backend/  (Python FastAPI + SQLite via SQLAlchemy async)
     ├── POST /api/comfyui/generate       → Face (MediaPipe) + ComfyUI 多管线
     ├── POST /api/comfyui/regenerate     → 参数调整（prompt_builder）重新生成
     ├── POST /api/comfyui/generate-multi → 4 角度生成（串行，Semaphore(1)）
+    ├── POST /api/comfyui/generate-video → 尝试戴图生成短 MP4（LTX / Hunyuan / AnimateDiff）
     ├── POST /api/v1/auth/*              → 短信登录（万能码）+ JWT
     ├── POST /api/v1/payment/*           → 套餐 / 下单 / mock 支付回调
     ├── POST /api/v1/membership/*        → 会员等级 / 升级 / 状态
@@ -254,6 +256,7 @@ make test
 | 变量 | 说明 |
 |------|------|
 | `COMFYUI_URL` | ComfyUI 地址，默认 `http://127.0.0.1:8188` |
+| `DEFAULT_VIDEO_PIPELINE` | 短视频默认管线，初始值 `ltx`；可改为 `hunyuan` 或 `animatediff`，无需重建移动端 |
 | `DATABASE_URL` | SQLite 路径，默认 `sqlite+aiosqlite:///./hairstyle.db` |
 | `JWT_SECRET_KEY` / `JWT_ALGORITHM` / `JWT_EXPIRE_HOURS` | JWT 签名配置（仅开发） |
 | `SKIP_POINTS_CHECK` | 开发期跳过点数校验，默认 `true` |
@@ -272,6 +275,7 @@ make test
 | `POST` | `/api/comfyui/regenerate` | 参数调整（length/curl/color → prompt）重新生成 |
 | `POST` | `/api/comfyui/generate-multi` | 4 角度生成（正/左/右/后） |
 | `GET` | `/api/comfyui/output/{filename}` | 生成结果图 |
+| `POST` | `/api/comfyui/generate-video` | 从 `image_id`、`image_url` 或 `photo_base64` 生成短 MP4；默认管线由 `DEFAULT_VIDEO_PIPELINE` 控制 |
 | `POST` | `/api/v1/auth/sms/send` | 发送验证码（开发期返回万能码） |
 | `POST` | `/api/v1/auth/sms/login` | 验证码登录 → JWT |
 | `POST` | `/api/v1/auth/wechat/login` · `/alipay/login` | 第三方登录（stub） |
@@ -298,6 +302,7 @@ make test
 ## 路线图
 
 - **P1（已完成）：** 发型参数滑条、多视角、原图对比、登录、点数、mock 充值、会员等级
+- **P1（已完成）：** 短视频生成（默认 LTX；`make video-bakeoff STILL=backend/output/<still>.png` 依次比较三个管线）
 - **P1（待办）：** 真实短信通道、真实微信/支付宝支付
 - **P2（已完成）：** 脸型适配推荐（`POST /api/recommend/by-photo`）、多级会员（Pro / Premium）
 - **P2（待办）：** 云端生成历史、收藏、工作流升级（HairPort / ACE++）

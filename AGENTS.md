@@ -15,7 +15,7 @@ AI 虚拟发型试戴 App（MVP 阶段），面向国内理发行业。
 
 - Monorepo: `mobile/` + `backend/`
 - Mobile → HTTP (JWT Bearer) → Backend → **ComfyUI** (`COMFYUI_URL`, default `http://127.0.0.1:8188`)
-- Active generate endpoint: `POST /api/comfyui/generate` (accepts `pipeline` + `method`)
+- Active generate endpoints: `POST /api/comfyui/generate` (still image) and `POST /api/comfyui/generate-video` (short MP4)
 - Templates served from `backend/data/templates_comfyui.json`
 - SQLite database (`app/database.py`, models in `app/models/{user,order,points_ledger}.py`)
 - Auth: phone + dev magic code `888888` → JWT (`app/routers/auth.py`); points/membership/mock-payment implemented; `SKIP_POINTS_CHECK=true` by default in dev
@@ -52,6 +52,7 @@ Mobile generation.ts
 - Save to album: `expo-media-library`
 - Share: `expo-sharing`
 - **Generate:** `services/generation.ts` posts to `/api/comfyui/generate` with `style_id` = **template id** (from route)
+- **Short video:** Preview calls `/api/comfyui/generate-video` with the generated still URL; no pipeline picker. `DEFAULT_VIDEO_PIPELINE=ltx` selects the backend default.
 
 ### Project State
 - 15 seed templates (7 men, 8 women) in `backend/data/templates_comfyui.json`
@@ -104,6 +105,13 @@ python scripts/generate_thumbnails.py
 python scripts/generate_thumbnails.py --id m1 --force --seed 42
 ```
 
+### Video bake-off
+```bash
+make video-bakeoff STILL=backend/output/<try-on-still>.png
+```
+Runs LTX, Hunyuan, and AnimateDiff sequentially and writes MP4s plus
+`backend/output/bakeoff/report.md`. `DEFAULT_VIDEO_PIPELINE` defaults to `ltx`.
+
 ## API Endpoints
 
 | Method | Path | Status |
@@ -114,6 +122,7 @@ python scripts/generate_thumbnails.py --id m1 --force --seed 42
 | POST | `/api/comfyui/generate` | **Primary** — multi-pipeline (`photo_base64` + `style_id` = template id + `pipeline`/`method`) |
 | POST | `/api/comfyui/regenerate` | Parameter-adjusted regeneration (length/curl/color → prompt) |
 | POST | `/api/comfyui/generate-multi` | 4-angle generation (front/left/right/back) |
+| POST | `/api/comfyui/generate-video` | Generate a short MP4 from `image_id`, `image_url`, or `photo_base64`; default pipeline from `DEFAULT_VIDEO_PIPELINE` |
 | GET | `/api/comfyui/output/{filename}` | Serve local generation output |
 | POST | `/api/v1/auth/sms/send` · `/sms/login` | Phone login (dev magic code `888888`) → JWT |
 | POST | `/api/v1/auth/wechat/login` · `/alipay/login` | Third-party login (stub) |

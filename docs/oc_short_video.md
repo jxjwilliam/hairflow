@@ -1,5 +1,24 @@
 # Short Video — ComfyUI Integration
 
+## Current default and bake-off
+
+The initial bake-off winner and API default is **LTX**:
+
+```env
+DEFAULT_VIDEO_PIPELINE=ltx
+```
+
+Run all three candidates serially against a generated still:
+
+```bash
+make video-bakeoff STILL=backend/output/<try-on-still>.png
+```
+
+The command writes each MP4 to `backend/output/bakeoff/<still-stem>/` and
+records successful and failed attempts in `backend/output/bakeoff/report.md`.
+Failures are expected for AnimateDiff until its custom nodes and motion
+weights are installed.
+
 ## Node discovery results (live · 2026-07-19)
 
 Catalog: `backend/data/video_node_catalog.json`  
