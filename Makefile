@@ -16,7 +16,7 @@
 
 SHELL := /bin/bash
 .PHONY: init start stop restart check status logs test clean thumbnails \
-        backend frontend backend-stop frontend-stop help
+        discover-video-nodes backend frontend backend-stop frontend-stop help
 
 # ── Config ────────────────────────────────────────────────────────────────
 BACKEND_DIR  := backend
@@ -201,6 +201,11 @@ thumbnails: ## Regenerate catalog thumbnails via ComfyUI
 thumbnails-force: ## Regenerate all thumbnails (overwrite existing)
 	@printf "$(BOLD)==> Regenerating ALL thumbnails (force)...$(RESET)\n"
 	cd $(BACKEND_DIR) && python scripts/generate_thumbnails.py --force
+
+discover-video-nodes: ## Probe ComfyUI for LTX/Hunyuan/AnimateDiff nodes
+	cd $(BACKEND_DIR) && \
+	  COMFYUI_URL=$(COMFYUI_URL) $(or $(wildcard $(BACKEND_DIR)/.venv/bin/python),$(wildcard venv/bin/python),python3) \
+	  scripts/discover_video_nodes.py
 
 # ===========================================================================
 # Database

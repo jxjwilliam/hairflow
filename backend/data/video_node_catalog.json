@@ -1,0 +1,22 @@
+{
+  "comfyui_url": "http://127.0.0.1:8188",
+  "discovery_note": "ComfyUI unreachable at discovery time (connection refused). Re-run: make discover-video-nodes",
+  "pipelines": {
+    "ltx": {
+      "matched_class_types": [],
+      "missing": true
+    },
+    "hunyuan": {
+      "matched_class_types": [],
+      "missing": true
+    },
+    "animatediff": {
+      "matched_class_types": [],
+      "missing": true
+    },
+    "video_io": {
+      "matched_class_types": [],
+      "missing": true
+    }
+  }
+}
