@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Platform,
   RefreshControl,
 } from 'react-native';
 import { Image } from 'expo-image';
@@ -63,17 +64,21 @@ export default function HistoryScreen() {
   };
 
   const handleClear = () => {
-    Alert.alert('清空效果图？', '将删除本机保存的试戴记录（不影响服务器文件）', [
-      { text: '取消', style: 'cancel' },
-      {
-        text: '清空',
-        style: 'destructive',
-        onPress: async () => {
-          await clearHistory();
-          setItems([]);
-        },
-      },
-    ]);
+    const doClear = async () => {
+      await clearHistory();
+      setItems([]);
+    };
+    if (Platform.OS === 'web') {
+      // RN Web Alert.alert only shows window.alert() - buttons never fire
+      if (window.confirm('清空效果图？将删除本机保存的试戴记录（不影响服务器文件）')) {
+        void doClear();
+      }
+    } else {
+      Alert.alert('清空效果图？', '将删除本机保存的试戴记录（不影响服务器文件）', [
+        { text: '取消', style: 'cancel' },
+        { text: '清空', style: 'destructive', onPress: doClear },
+      ]);
+    }
   };
 
   if (items.length === 0) {
