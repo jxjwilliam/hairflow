@@ -4,7 +4,7 @@
 
 > 个人开发者业余项目 · MVP 阶段  
 > **App 名称：** 发型试戴  
-> **当前 AI 后端：本地 ComfyUI 多管线**（PhotoMaker v1 / SD1.5 / FLUX.2 Klein 4B；美图 API 代码保留为遗留路径，App 默认不再调用）  
+> **当前 AI 后端：本地 ComfyUI 多管线**（PhotoMaker v1 / SD1.5 / FLUX.2 Klein 4B）  
 > **开发环境：** macOS (CPU-only) — FLUX.1 Schnell 12GB GGUF 无法加载，FLUX.2 Klein txt2img 8GB CLIP OOM，因此前端只展示 CPU 可行组合
 
 ---
@@ -49,8 +49,7 @@ backend/  (Python FastAPI + SQLite via SQLAlchemy async)
     ├── POST /api/v1/auth/*              → 短信登录（万能码）+ JWT
     ├── POST /api/v1/payment/*           → 套餐 / 下单 / mock 支付回调
     ├── POST /api/v1/membership/*        → 会员等级 / 升级 / 状态
-    ├── POST /api/recommend/by-photo     → 脸型检测 + 模板推荐
-    └── POST /api/generate               → 遗留 Meitu 路径（未接入前端）
+    └── POST /api/recommend/by-photo     → 脸型检测 + 模板推荐
               │
               ▼
          ComfyUI :8188  (Pinokio / 本机)
@@ -109,7 +108,6 @@ backend/  (Python FastAPI + SQLite via SQLAlchemy async)
 - MediaPipe 本地人脸检测；脸型分析（`face_shape.py`）用于推荐
 - 模板：`backend/data/templates_comfyui.json`
 - 用户 / 订单 / 点数流水：`app/models/{user,order,points_ledger}.py`
-- 遗留：美图 API（`meitu.py`）、OSS（`oss.py`）
 
 ---
 
@@ -148,8 +146,8 @@ hairstyle/
 │       └── templates.ts         # 模板列表
 ├── backend/
 │   ├── app/
-│   │   ├── routers/             # templates / comfyui_generation / auth / payment / membership / face_recommend / generation(遗留)
-│   │   ├── services/            # comfyui / face / face_shape / prompt_builder / auth_service / points_service / membership_service / meitu(遗留) / oss(遗留)
+│   │   ├── routers/             # templates / comfyui_generation / auth / payment / membership / face_recommend
+│   │   ├── services/            # comfyui / face / face_shape / prompt_builder / auth_service / points_service / membership_service
 │   │   ├── models/              # schemas.py + user.py / order.py / points_ledger.py (SQLAlchemy)
 │   │   ├── database.py          # async engine + session（SQLite）
 │   │   ├── dependencies.py      # get_current_user（JWT）
@@ -255,14 +253,11 @@ make test
 
 | 变量 | 说明 |
 |------|------|
-| `COMFYUI_URL` | 默认 `http://127.0.0.1:8188` |
-| `DATABASE_URL` | 默认 `sqlite+aiosqlite:///./hairstyle.db` |
-| `JWT_SECRET_KEY` / `JWT_ALGORITHM` / `JWT_EXPIRE_HOURS` | 登录 token 签名（默认值仅供开发） |
-| `SKIP_POINTS_CHECK` | 默认 `true`（开发期不扣点、不校验配额）；生产设 `false` |
-| `DEV_MAGIC_CODE` | 开发万能短信验证码，默认 `888888` |
-| `MEITU_*` | 遗留美图路径（前端未使用） |
-| `OSS_*` | 可选；当前生成默认写 `backend/output/` |
-| `ALI_CLOUD_VISION_KEY` | 未使用（MediaPipe） |
+| `COMFYUI_URL` | ComfyUI 地址，默认 `http://127.0.0.1:8188` |
+| `DATABASE_URL` | SQLite 路径，默认 `sqlite+aiosqlite:///./hairstyle.db` |
+| `JWT_SECRET_KEY` / `JWT_ALGORITHM` / `JWT_EXPIRE_HOURS` | JWT 签名配置（仅开发） |
+| `SKIP_POINTS_CHECK` | 开发期跳过点数校验，默认 `true` |
+| `DEV_MAGIC_CODE` | 万能验证码，默认 `888888` |
 
 ---
 
@@ -288,8 +283,7 @@ make test
 | `POST` | `/api/v1/membership/upgrade` | 升级会员（需 JWT） |
 | `GET` | `/api/v1/membership/my-status` | 我的会员状态（需 JWT） |
 | `POST` | `/api/recommend/by-photo` | 脸型检测 + 发型推荐 |
-| `POST` | `/api/generate` | 遗留 Meitu（前端未接入） |
-| `POST` | `/api/regenerate` | 遗留 stub（501） |
+| _(已清理)_ | `/api/generate` · `/api/regenerate` | 已移除的遗留 Meitu 路径 |
 
 ---
 
@@ -335,12 +329,12 @@ MIT
 | --- | --- | --- |
 | ![Home](screenshots/home.png) | ![History](screenshots/history.png) | ![Login](screenshots/login.png) |
 
-| Capture | Options | Preview |
+| Capture | Options | Recharge |
 | --- | --- | --- |
-| ![Capture](screenshots/capture.png) | ![Options](screenshots/options.png) | ![Preview](screenshots/preview.png) |
+| ![Capture](screenshots/capture.png) | ![Options](screenshots/options.png) | ![Recharge](screenshots/recharge.png) |
 
-| Result View | Recharge | Membership |
+| Membership |  |  |
 | --- | --- | --- |
-| ![Result View](screenshots/result-view.png) | ![Recharge](screenshots/recharge.png) | ![Membership](screenshots/membership.png) |
+| ![Membership](screenshots/membership.png) |  |  |
 
 <!-- /screenshots -->

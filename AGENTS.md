@@ -9,7 +9,7 @@ AI 虚拟发型试戴 App（MVP 阶段），面向国内理发行业。
 - **AI:** Local **ComfyUI** multi-pipeline — **PhotoMaker v1** + SD1.5 (`photon_v1.safetensors`) default; also `sd15`, `flux` (FLUX.1 Schnell GGUF), `flux_klein` (FLUX.2 Klein 4B GGUF, native edit workflow)
 - **Face detection:** MediaPipe (local), not Aliyun Vision
 - **Storage (dev):** Local disk — `backend/output/` for generations, `backend/static/thumbnails/` for catalog; SQLite `backend/hairstyle.db` for users/orders/points
-- **Legacy (unused by mobile):** Meitu mtlab API (`meitu.py`), Alibaba OSS (`oss.py`)
+- **Legacy (removed):** Meitu mtlab API (`meitu.py`), Alibaba OSS (`oss.py`), legacy `/api/generate` endpoint — all cleaned up
 
 ## Architecture
 
@@ -51,7 +51,7 @@ Mobile generation.ts
 - Photo picker: `expo-image-picker`, returns base64
 - Save to album: `expo-media-library`
 - Share: `expo-sharing`
-- **Generate:** `services/generation.ts` posts to `/api/comfyui/generate` with `style_id` = **template id** (from route), not Meitu `meitu_style_*`
+- **Generate:** `services/generation.ts` posts to `/api/comfyui/generate` with `style_id` = **template id** (from route)
 
 ### Project State
 - 15 seed templates (7 men, 8 women) in `backend/data/templates_comfyui.json`

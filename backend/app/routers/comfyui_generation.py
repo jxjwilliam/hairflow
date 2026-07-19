@@ -134,16 +134,9 @@ async def comfyui_generate(
         logger.exception("ComfyUI generation unexpected error")
         raise HTTPException(status_code=502, detail=f"AI generation error: {e}")
 
-    # --- Step 6: Save result (try OSS, fall back to local) ---
-    try:
-        from app.services.oss import get_oss_service
-        oss = get_oss_service()
-        url, image_id = oss.upload_image(image_bytes, content_type="image/png")
-        logger.info("Uploaded to OSS: %s", url)
-    except Exception as e:
-        logger.warning("OSS upload failed (%s), saving locally", e)
-        base_url = str(request.base_url).rstrip("/")
-        url, image_id = _save_locally(image_bytes, base_url=base_url)
+    # --- Step 6: Save result locally ---
+    base_url = str(request.base_url).rstrip("/")
+    url, image_id = _save_locally(image_bytes, base_url=base_url)
 
     # --- Step 7: Record generation for quota ---
     if not settings.skip_points_check and user is not None:
@@ -215,13 +208,8 @@ async def comfyui_regenerate(
     except ComfyUIError as e:
         raise HTTPException(status_code=502, detail=f"AI generation failed: {e}")
 
-    try:
-        from app.services.oss import get_oss_service
-        oss = get_oss_service()
-        url, image_id = oss.upload_image(image_bytes, content_type="image/png")
-    except Exception:
-        base_url = str(request.base_url).rstrip("/")
-        url, image_id = _save_locally(image_bytes, base_url=base_url)
+    base_url = str(request.base_url).rstrip("/")
+    url, image_id = _save_locally(image_bytes, base_url=base_url)
 
     if not settings.skip_points_check and user is not None:
         await membership_service.record_generation(session, user)

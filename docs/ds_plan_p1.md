@@ -4,7 +4,8 @@
 > **日期**: 2026-07-18  
 > **状态**: Draft  
 > **前提**: MacBook 本地开发（ComfyUI + FastAPI + Expo Web），忽略阿里云部署  
-> **关联**: [README.md](../README.md) · [AGENTS.md](../AGENTS.md) · [ds_comfyui_setup.md](./ds_comfyui_setup.md)
+> **关联**: [README.md](../README.md) · [AGENTS.md](../AGENTS.md) · [ds_comfyui_setup.md](./ds_comfyui_setup.md)  
+> **2026-07-19 清理**: 本文提及的 `generation.py`（Meitu）、`meitu.py`、`oss.py` 已删除，代码库不再包含美图 API 相关代码。
 
 ---
 

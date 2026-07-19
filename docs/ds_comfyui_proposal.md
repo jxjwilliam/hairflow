@@ -4,7 +4,8 @@
 > **日期**: 2026-07-17  
 > **状态**: **Implemented**（主路径已落地；细节以 `README.md` / `AGENTS.md` / `ds_comfyui_setup.md` 为准）  
 > **背景**: Meitu API 需要付费订阅（¥6700+/年），免费 Key 无法调用 `portrait_edit`。  
-> **前提**: 本地 ComfyUI（Pinokio）；可选本地 Ollama（非生成必需）。
+> **前提**: 本地 ComfyUI（Pinokio）；可选本地 Ollama（非生成必需）。  
+> **2026-07-19 清理**: 本文引用的 meitu.py / oss.py / generation.py（遗留 Meitu 路径）已删除，代码库不再包含美图 API 相关代码。
 
 ---
 

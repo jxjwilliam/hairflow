@@ -124,7 +124,7 @@ POST /api/comfyui/generate
 
 模板列表来自 `data/templates_comfyui.json`，缩略图经 `/static/thumbnails/` 提供。
 
-遗留：`POST /api/generate`（Meitu）仍在代码中，**前端未接入**。美图 Key 无 `portrait_edit` 权限时不可用。
+> 遗留的 `POST /api/generate`（Meitu）以及 meitu.py / oss.py 已清理删除，代码库不再包含美图 API 相关代码。
 
 Catalog 缩略图批生成（txt2img，无 PhotoMaker）：
 

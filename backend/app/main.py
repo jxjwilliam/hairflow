@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.database import init_db
-from app.routers import generation, templates, comfyui_generation, auth, payment, face_recommend, membership
+from app.routers import templates, comfyui_generation, auth, payment, face_recommend, membership
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,6 @@ app.add_middleware(
 )
 
 app.include_router(templates.router)
-app.include_router(generation.router)
 app.include_router(comfyui_generation.router)
 app.include_router(auth.router)
 app.include_router(payment.router)
