@@ -1,14 +1,105 @@
 {
-  "1": {"class_type": "LoadImage", "inputs": {"image": "__IMAGE_FILENAME__"}},
-  "2": {"class_type": "ImageScale", "inputs": {"image": ["1", 0], "upscale_method": "lanczos", "width": 512, "height": 768, "crop": "center"}},
-  "3": {"class_type": "UNETLoader", "inputs": {"unet_name": "hunyuan_video_720_cfgdistill_fp8_e4m3fn.safetensors", "weight_dtype": "fp8_e4m3fn"}},
-  "4": {"class_type": "DualCLIPLoader", "inputs": {"clip_name1": "clip_l.safetensors", "clip_name2": "t5xxl_fp16.safetensors", "type": "hunyuan_video"}},
-  "5": {"class_type": "VAELoader", "inputs": {"vae_name": "hunyuan_video_vae_bf16.safetensors"}},
-  "6": {"class_type": "CLIPTextEncodeHunyuanDiT", "inputs": {"clip": ["4", 0], "bert": "subtle natural hair movement, soft head turn, cinematic portrait, keep face identity, keep hairstyle", "mt5xl": "subtle natural hair movement, soft head turn, cinematic portrait, keep face identity, keep hairstyle"}},
-  "7": {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["6", 0]}},
-  "8": {"class_type": "HunyuanImageToVideo", "inputs": {"positive": ["6", 0], "vae": ["5", 0], "width": 512, "height": 768, "length": "__FRAME_COUNT_WITH_INITIAL__", "batch_size": 1, "guidance_type": "v2 (replace)", "start_image": ["2", 0]}},
-  "9": {"class_type": "KSampler", "inputs": {"model": ["3", 0], "seed": "__SEED__", "steps": 20, "cfg": 1.0, "sampler_name": "euler", "scheduler": "simple", "positive": ["8", 0], "negative": ["7", 0], "latent_image": ["8", 1], "denoise": 1.0}},
-  "10": {"class_type": "VAEDecode", "inputs": {"samples": ["9", 0], "vae": ["5", 0]}},
-  "11": {"class_type": "CreateVideo", "inputs": {"images": ["10", 0], "fps": "__FPS__"}},
-  "12": {"class_type": "SaveVideo", "inputs": {"video": ["11", 0], "filename_prefix": "hairflow/hunyuan", "format": "mp4", "codec": "h264"}}
+  "1": {
+    "class_type": "LoadImage",
+    "inputs": { "image": "__IMAGE_FILENAME__" }
+  },
+  "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+      "image": ["1", 0],
+      "upscale_method": "lanczos",
+      "width": 512,
+      "height": 768,
+      "crop": "center"
+    }
+  },
+  "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "hunyuan_video_720_cfgdistill_fp8_e4m3fn.safetensors",
+      "weight_dtype": "fp8_e4m3fn"
+    }
+  },
+  "4": {
+    "class_type": "DualCLIPLoader",
+    "inputs": {
+      "clip_name1": "clip_l.safetensors",
+      "clip_name2": "llava_llama3_fp8_scaled.safetensors",
+      "type": "hunyuan_video"
+    }
+  },
+  "5": {
+    "class_type": "VAELoader",
+    "inputs": { "vae_name": "hunyuan_video_vae_bf16.safetensors" }
+  },
+  "6": {
+    "class_type": "CLIPVisionLoader",
+    "inputs": { "clip_name": "llava_llama3_vision.safetensors" }
+  },
+  "7": {
+    "class_type": "CLIPVisionEncode",
+    "inputs": {
+      "clip_vision": ["6", 0],
+      "image": ["2", 0],
+      "crop": "none"
+    }
+  },
+  "8": {
+    "class_type": "TextEncodeHunyuanVideo_ImageToVideo",
+    "inputs": {
+      "clip": ["4", 0],
+      "clip_vision_output": ["7", 0],
+      "prompt": "subtle natural hair movement, soft head turn, cinematic portrait, keep face identity, keep hairstyle",
+      "image_interleave": 2
+    }
+  },
+  "9": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": { "conditioning": ["8", 0] }
+  },
+  "10": {
+    "class_type": "HunyuanImageToVideo",
+    "inputs": {
+      "positive": ["8", 0],
+      "vae": ["5", 0],
+      "width": 512,
+      "height": 768,
+      "length": "__FRAME_COUNT_WITH_INITIAL__",
+      "batch_size": 1,
+      "guidance_type": "v2 (replace)",
+      "start_image": ["2", 0]
+    }
+  },
+  "11": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["3", 0],
+      "seed": "__SEED__",
+      "steps": 20,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": ["10", 0],
+      "negative": ["9", 0],
+      "latent_image": ["10", 1],
+      "denoise": 1.0
+    }
+  },
+  "12": {
+    "class_type": "VAEDecode",
+    "inputs": { "samples": ["11", 0], "vae": ["5", 0] }
+  },
+  "13": {
+    "class_type": "CreateVideo",
+    "inputs": { "images": ["12", 0], "fps": "__FPS__" }
+  },
+  "14": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "video": ["13", 0],
+      "filename_prefix": "hairflow/hunyuan",
+      "format": "mp4",
+      "codec": "h264"
+    }
+  }
 }

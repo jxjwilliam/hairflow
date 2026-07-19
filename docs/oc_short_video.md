@@ -83,12 +83,31 @@ not awaited because local jobs must remain sequential.
 
 ### Hunyuan graph
 
-`backend/static/workflows/hunyuan_i2v_hairstyle.json` uses `UNETLoader`,
-`DualCLIPLoader` (`hunyuan_video`), `VAELoader`,
-`CLIPTextEncodeHunyuanDiT`, `HunyuanImageToVideo`, `KSampler`,
-`VAEDecode`, `CreateVideo`, and `SaveVideo`, with the existing Hunyuan fp8
-UNET and bf16 VAE. Its live `/prompt` validation was accepted
-(`adfdc7a7-40bf-4f0c-94c0-da44a2fc0c80`); generation was not awaited.
+`backend/static/workflows/hunyuan_i2v_hairstyle.json` follows the official
+ComfyUI **Hunyuan Video** image-to-video example (not Hunyuan DiT):
+
+`LoadImage` → `ImageScale` → `UNETLoader` + `DualCLIPLoader` (`type=hunyuan_video`,
+`clip_l` + `llava_llama3_fp8_scaled`) + `VAELoader` + `CLIPVisionLoader`
+(`llava_llama3_vision`) → `CLIPVisionEncode` →
+`TextEncodeHunyuanVideo_ImageToVideo` → `HunyuanImageToVideo` → `KSampler` →
+`VAEDecode` → `CreateVideo` → `SaveVideo`.
+
+**Do not** use `CLIPTextEncodeHunyuanDiT` here — that node expects an `mt5xl`
+tokenizer from a DiT CLIP (`hunyuan_dit` / BERT+mT5). Video DualCLIP with
+`type=hunyuan_video` does not provide `mt5xl`, which causes `KeyError: 'mt5xl'`.
+
+#### Required downloads (missing on this machine as of 2026-07-19)
+
+Place under ComfyUI `models/text_encoders/` (or clip/) and `models/clip_vision/`:
+
+| File | Role |
+|------|------|
+| `llava_llama3_fp8_scaled.safetensors` | DualCLIP second encoder |
+| `llava_llama3_vision.safetensors` | CLIP vision for I2V |
+
+Typical source: [Comfy-Org/HunyuanVideo_repackaged](https://huggingface.co/Comfy-Org/HunyuanVideo_repackaged) on Hugging Face.
+Until those appear in `/object_info` enums, Hunyuan bake-off/API runs will fail at model load; keep `DEFAULT_VIDEO_PIPELINE=ltx`.
+
 
 ### Matched class_types
 
@@ -120,7 +139,7 @@ AnimateDiff custom nodes are **not** expected on this Pinokio ComfyUI build toda
 | Pipeline | Files |
 |----------|-------|
 | **ltx** | `ltx-video-2b-v0.9.5.safetensors`, `t5xxl_fp16.safetensors` |
-| **hunyuan** | `hunyuan_video_720_cfgdistill_fp8_e4m3fn.safetensors`, `hunyuan_video_vae_bf16.safetensors` |
+| **hunyuan** | UNET+VAE above + `clip_l.safetensors` + **`llava_llama3_fp8_scaled.safetensors`** + **`llava_llama3_vision.safetensors`** (download required) |
 | **animatediff** | motion module TBD after install + `realisticVisionV60B1_v60B1VAE.safetensors` |
 
 Paths follow Pinokio ComfyUI layout under `models/` (see [`docs/ds_comfyui_setup.md`](ds_comfyui_setup.md)).

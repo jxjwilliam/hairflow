@@ -50,6 +50,12 @@ def test_hunyuan_workflow_references_weights():
     blob = json.dumps(workflow)
     assert "hunyuan_video_720_cfgdistill_fp8_e4m3fn.safetensors" in blob
     assert "hunyuan_video_vae_bf16.safetensors" in blob
+    # Official Hunyuan *Video* I2V path (not DiT / mt5xl)
+    assert "TextEncodeHunyuanVideo_ImageToVideo" in blob
+    assert "CLIPTextEncodeHunyuanDiT" not in blob
+    assert '"type": "hunyuan_video"' in blob or '"type":"hunyuan_video"' in blob
+    assert "llava_llama3_fp8_scaled.safetensors" in blob
+    assert "llava_llama3_vision.safetensors" in blob
 
 
 def test_animatediff_workflow_requires_install_but_references_realistic_vision():

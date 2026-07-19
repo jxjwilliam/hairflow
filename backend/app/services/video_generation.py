@@ -42,6 +42,8 @@ class VideoGenerationService:
     ) -> bytes:
         """Upload one still, submit a video workflow, and return its MP4 bytes."""
         async with _COMFYUI_VIDEO_SEMAPHORE:
+            if pipeline.lower() == "hunyuan":
+                await self._assert_hunyuan_video_encoders_present()
             filename = await self._upload_image(image, prefix="hairflow_video_input")
             workflow = self.build_workflow(
                 pipeline,
@@ -55,6 +57,33 @@ class VideoGenerationService:
                 prompt_id, timeout=settings.video_timeout_seconds
             )
             return await self._download_result(result_filename)
+
+    async def _assert_hunyuan_video_encoders_present(self) -> None:
+        """Fail fast if llava_llama3 text/vision encoders are not installed."""
+        required_clip = "llava_llama3_fp8_scaled.safetensors"
+        required_vision = "llava_llama3_vision.safetensors"
+        missing: list[str] = []
+        async with httpx.AsyncClient(timeout=30) as client:
+            dual = await client.get(f"{self.base_url}/object_info/DualCLIPLoader")
+            vision = await client.get(f"{self.base_url}/object_info/CLIPVisionLoader")
+            dual.raise_for_status()
+            vision.raise_for_status()
+            dual_body = dual.json()["DualCLIPLoader"]["input"]["required"]
+            clip2 = dual_body["clip_name2"][0]
+            vision_names = vision.json()["CLIPVisionLoader"]["input"]["required"]["clip_name"][0]
+        if required_clip not in clip2:
+            missing.append(required_clip)
+        if required_vision not in vision_names:
+            missing.append(required_vision)
+        if missing:
+            raise ComfyUIError(
+                "Hunyuan Video I2V needs DualCLIP type=hunyuan_video with clip_l + "
+                "llava_llama3_fp8_scaled, plus CLIPVision llava_llama3_vision. "
+                f"Missing in ComfyUI model list: {', '.join(missing)}. "
+                "Download from Hugging Face Comfy-Org/HunyuanVideo_repackaged into "
+                "models/text_encoders (or clip/) and models/clip_vision/, then restart "
+                "ComfyUI. Until then use DEFAULT_VIDEO_PIPELINE=ltx."
+            )
 
     def build_workflow(
         self, pipeline: str, *, image_filename: str, seed: int, frames: int, fps: int
@@ -101,6 +130,9 @@ class VideoGenerationService:
     def _build_hunyuan_workflow(
         self, image_filename: str, seed: int, frames: int, fps: int
     ) -> dict:
+        # Official Hunyuan *Video* I2V uses DualCLIP type=hunyuan_video with
+        # clip_l + llava_llama3, plus CLIP vision — not CLIPTextEncodeHunyuanDiT
+        # (that DiT node needs mt5xl and will KeyError on a Video CLIP).
         return self._parameterize(
             _load_workflow_template("hunyuan_i2v_hairstyle.json"),
             image_filename=image_filename,
