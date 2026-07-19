@@ -16,7 +16,7 @@
 
 SHELL := /bin/bash
 .PHONY: init start stop restart check status logs test clean thumbnails \
-        discover-video-nodes backend frontend backend-stop frontend-stop help
+        discover-video-nodes video-bakeoff backend frontend backend-stop frontend-stop help
 
 # ── Config ────────────────────────────────────────────────────────────────
 BACKEND_DIR  := backend
@@ -206,6 +206,10 @@ discover-video-nodes: ## Probe ComfyUI for LTX/Hunyuan/AnimateDiff nodes
 	cd $(BACKEND_DIR) && \
 	  COMFYUI_URL=$(COMFYUI_URL) $(or $(wildcard $(BACKEND_DIR)/.venv/bin/python),$(wildcard venv/bin/python),python3) \
 	  scripts/discover_video_nodes.py
+
+video-bakeoff: ## Sequential LTX/Hunyuan/AnimateDiff bake-off. Usage: make video-bakeoff STILL=backend/output/x.png
+	@test -n "$(STILL)" || (echo "Set STILL=path/to/still.png"; exit 1)
+	cd $(BACKEND_DIR) && PYTHONPATH=. python scripts/video_bakeoff.py $(STILL)
 
 # ===========================================================================
 # Database
