@@ -42,6 +42,17 @@ def test_ltx_workflow_references_known_weights():
     blob = json.dumps(workflow)
     assert "ltx-video-2b-v0.9.5.safetensors" in blob
     assert "t5xxl_fp16.safetensors" in blob or "t5xxl" in blob.lower()
+    assert "CheckpointLoaderSimple" in blob
+    assert "LTXVPreprocess" in blob
+    assert '"type": "ltxv"' in blob or '"type":"ltxv"' in blob
+    # Official order: ImgToVideo → Conditioning (not Conditioning before ImgToVideo)
+    assert workflow["8"]["class_type"] == "LTXVImgToVideo"
+    assert workflow["9"]["class_type"] == "LTXVConditioning"
+    assert workflow["9"]["inputs"]["positive"] == ["8", 0]
+    assert workflow["12"]["inputs"]["latent_image"] == ["8", 2]
+    assert workflow["1"]["inputs"]["image"] == "still.png"
+    assert "__IMAGE_FILENAME__" not in blob
+    assert "missing_input" not in blob
 
 
 def test_hunyuan_workflow_references_weights():

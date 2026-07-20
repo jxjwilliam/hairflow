@@ -68,18 +68,24 @@ Script: [`backend/scripts/discover_video_nodes.py`](../backend/scripts/discover_
 
 ### LTX graph
 
-`backend/static/workflows/ltx_i2v_hairstyle.json` is an API-format graph using:
+`backend/static/workflows/ltx_i2v_hairstyle.json` follows ComfyUI’s official
+`ltxv_image_to_video_simple` topology:
 
-`LoadImage` → `ImageScale` → `UNETLoader` (`ltx-video-2b-v0.9.5.safetensors`) +
-`CLIPLoader` (`t5xxl_fp16.safetensors`, `ltxv`) + `VAELoader` →
-`CLIPTextEncode` → `LTXVConditioning` → `LTXVImgToVideo` →
-`ModelSamplingLTXV` / `LTXVScheduler` / `SamplerCustomAdvanced` →
-`VAEDecode` → `CreateVideo` → `SaveVideo`.
+`LoadImage` → `ImageScale` → `LTXVPreprocess` → `LTXVImgToVideo`
+← CLIP (`t5xxl`, `type=ltxv`) + VAE/MODEL from `CheckpointLoaderSimple`
+(`ltx-video-2b-v0.9.5.safetensors`)  
+→ `LTXVConditioning` (on ImgToVideo’s conditioning outs)  
+→ `LTXVScheduler` + `SamplerCustom` (latent = ImgToVideo output index **2**)  
+→ `VAEDecode` → `CreateVideo` → `SaveVideo`.
 
-The graph uses 512×768, a requested 24 frames plus the required initial still
-(25 latent frames), and 8 fps. A live `/prompt` validation on 2026-07-19
-accepted the graph (`fbf16ad4-b051-477d-978d-fb3119307a9b`); completion was
-not awaited because local jobs must remain sequential.
+**Do not** put `LTXVConditioning` before `LTXVImgToVideo`, or wire conditioning
+into `latent`/`latent_image` slots. **Do not** use an SD1.5 VAE with the LTX
+UNET — that causes channel mismatch (e.g. 16 vs 64) inside `nodes_lt.py`.
+
+The LTX weights live under Pinokio `models/diffusion_models/`; a symlink into
+`peers/.../checkpoints/ltx-video-2b-v0.9.5.safetensors` makes
+`CheckpointLoaderSimple` see the file.
+
 
 ### Hunyuan graph
 
