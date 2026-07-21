@@ -42,4 +42,35 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      await AsyncStorage.removeItem(TOKEN_KEY);
+    }
+    return Promise.reject(error);
+  },
+);
+
+/** User-facing message from an axios / API failure. */
+export function apiErrorMessage(error: unknown, fallback: string): string {
+  if (!axios.isAxiosError(error)) {
+    return fallback;
+  }
+  if (error.response?.status === 401) {
+    return '登录已过期，请重新登录后再试（或退出登录后以游客身份生成）';
+  }
+  const detail = error.response?.data?.detail;
+  if (typeof detail === 'string' && detail.trim()) {
+    return detail;
+  }
+  if (error.code === 'ECONNABORTED') {
+    return '请求超时，请确认 ComfyUI 是否仍在运行后重试';
+  }
+  if (!error.response) {
+    return '无法连接后端，请确认服务已启动';
+  }
+  return fallback;
+}
+
 export default api;

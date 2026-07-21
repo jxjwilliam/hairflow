@@ -18,6 +18,7 @@ import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import { addHistoryItem } from '../services/history';
 import { useSession } from '../context/SessionContext';
 import { colors, spacing } from '../constants/theme';
+import { apiErrorMessage } from '../services/api';
 import type { GenerationOptions, RegenerateParams } from '../types';
 
 type ViewMode = 'single' | 'multi' | 'compare';
@@ -68,8 +69,8 @@ export default function PreviewScreen() {
       setVideoUrl(null);
       saveToHistory(data.image_url, 'single');
     },
-    onError: () => {
-      alert('生成失败，请确认后端与 ComfyUI 已启动后重试');
+    onError: (error) => {
+      alert(apiErrorMessage(error, '生成失败，请确认后端与 ComfyUI 已启动后重试'));
     },
   });
 
@@ -83,8 +84,8 @@ export default function PreviewScreen() {
       setViewMode('multi');
       Object.values(data.images).forEach((img) => saveToHistory(img.url, 'front'));
     },
-    onError: () => {
-      alert('多角度生成失败');
+    onError: (error) => {
+      alert(apiErrorMessage(error, '多角度生成失败'));
     },
   });
 
@@ -97,8 +98,8 @@ export default function PreviewScreen() {
       setMultiAngleData(null);
       setViewMode('single');
       saveToHistory(data.image_url, 'single');
-    } catch {
-      alert('重新生成失败');
+    } catch (error) {
+      alert(apiErrorMessage(error, '重新生成失败'));
     } finally {
       setRegenerating(false);
     }
@@ -109,8 +110,8 @@ export default function PreviewScreen() {
     onSuccess: (data) => {
       setVideoUrl(data.video_url);
     },
-    onError: () => {
-      alert('短视频生成失败，请确认 ComfyUI 已启动且视频模型可用');
+    onError: (error) => {
+      alert(apiErrorMessage(error, '短视频生成失败，请确认 ComfyUI 已启动且视频模型可用'));
     },
   });
 

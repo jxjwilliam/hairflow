@@ -24,7 +24,9 @@ async def get_current_user(
     """Extract and validate JWT from Authorization header.
 
     Returns None if no token is provided (anonymous access).
-    Raises 401 if token is invalid or user not found.
+    Expired/invalid tokens are treated as anonymous for optional-auth routes
+    (generate still works when SKIP_POINTS_CHECK=true); require_user still
+    rejects anonymous callers.
     """
     if credentials is None:
         return None
@@ -38,24 +40,18 @@ async def get_current_user(
         )
         user_id: int | None = payload.get("user_id")
         if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token: missing user_id",
-            )
+            logger.warning("JWT missing user_id — treating as anonymous")
+            return None
     except JWTError as e:
-        logger.warning("JWT decode failed: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-        ) from e
+        # Stale login after JWT_EXPIRE_HOURS must not block anonymous generate.
+        logger.warning("JWT decode failed (%s) — treating as anonymous", e)
+        return None
 
     result = await session.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-        )
+        logger.warning("JWT user_id=%s not found — treating as anonymous", user_id)
+        return None
     return user
 
 

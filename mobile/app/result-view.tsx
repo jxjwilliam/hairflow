@@ -1,8 +1,12 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMutation } from '@tanstack/react-query';
+import { Video, ResizeMode } from 'expo-av';
 import ResultView from '../components/ResultView';
 import ActionButtons from '../components/ActionButtons';
+import LoadingOverlay from '../components/LoadingOverlay';
+import { generateVideo } from '../services/generation';
 import { colors, spacing, radii } from '../constants/theme';
 import type { GenerationOptions } from '../types';
 
@@ -28,6 +32,7 @@ export default function ResultViewScreen() {
     createdAt?: string;
   }>();
   const router = useRouter();
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   const options: GenerationOptions | null = useMemo(() => {
     if (!generationOptions) return null;
@@ -40,7 +45,9 @@ export default function ResultViewScreen() {
       ) {
         return p as GenerationOptions;
       }
-    } catch {}
+    } catch {
+      // ignore malformed history metadata
+    }
     return null;
   }, [generationOptions]);
 
@@ -49,6 +56,16 @@ export default function ResultViewScreen() {
     const ts = parseInt(createdAt, 10);
     return Number.isNaN(ts) ? null : new Date(ts);
   }, [createdAt]);
+
+  const videoMutation = useMutation({
+    mutationFn: () => generateVideo({ imageUrl: imageUrl! }),
+    onSuccess: (data) => {
+      setVideoUrl(data.video_url);
+    },
+    onError: () => {
+      alert('短视频生成失败，请确认 ComfyUI 已启动且视频模型可用');
+    },
+  });
 
   if (!imageUrl) {
     return (
@@ -59,40 +76,67 @@ export default function ResultViewScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll} style={styles.container}>
-      {templateName ? <Text style={styles.label}>{templateName}</Text> : null}
-      <ResultView imageUrl={imageUrl} />
-
-      {options && (
-        <View style={styles.metaCard}>
-          <Text style={styles.metaTitle}>生成参数</Text>
-          <View style={styles.metaDivider} />
-          <MetaRow label="模型" value={PIPELINE_LABELS[options.pipeline] || options.pipeline} />
-          <MetaRow label="方式" value={METHOD_LABELS[options.method] || options.method} />
-          <MetaRow
-            label="变化程度"
-            value={`${Math.round(options.denoise * 100)}%`}
-          />
-          <MetaRow label="步数" value={`${options.steps}`} />
-          <MetaRow
-            label="CFG"
-            value={options.pipeline.startsWith('flux') ? '1.0（固定）' : String(options.cfg)}
-          />
-          {createdDate && (
-            <MetaRow
-              label="生成时间"
-              value={createdDate.toLocaleString()}
-            />
-          )}
-        </View>
+    <View style={styles.container}>
+      {videoMutation.isPending && (
+        <LoadingOverlay message="正在生成短视频（本机可能需要数分钟）…" />
       )}
+      <ScrollView contentContainerStyle={styles.scroll}>
+        {templateName ? <Text style={styles.label}>{templateName}</Text> : null}
+        <ResultView imageUrl={imageUrl} />
 
-      <ActionButtons
-        imageUrl={imageUrl}
-        onTryAnotherStyle={() => router.replace('/')}
-        onBackHome={() => router.replace('/')}
-      />
-    </ScrollView>
+        {options && (
+          <View style={styles.metaCard}>
+            <Text style={styles.metaTitle}>生成参数</Text>
+            <View style={styles.metaDivider} />
+            <MetaRow label="模型" value={PIPELINE_LABELS[options.pipeline] || options.pipeline} />
+            <MetaRow label="方式" value={METHOD_LABELS[options.method] || options.method} />
+            <MetaRow
+              label="变化程度"
+              value={`${Math.round(options.denoise * 100)}%`}
+            />
+            <MetaRow label="步数" value={`${options.steps}`} />
+            <MetaRow
+              label="CFG"
+              value={options.pipeline.startsWith('flux') ? '1.0（固定）' : String(options.cfg)}
+            />
+            {createdDate && (
+              <MetaRow
+                label="生成时间"
+                value={createdDate.toLocaleString()}
+              />
+            )}
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={[
+            styles.videoButton,
+            videoMutation.isPending && styles.videoButtonDisabled,
+          ]}
+          onPress={() => videoMutation.mutate()}
+          disabled={videoMutation.isPending}
+          accessibilityRole="button"
+          accessibilityLabel="生成短视频"
+        >
+          <Text style={styles.videoButtonText}>生成短视频</Text>
+        </TouchableOpacity>
+
+        {videoUrl && (
+          <Video
+            source={{ uri: videoUrl }}
+            useNativeControls
+            resizeMode={ResizeMode.CONTAIN}
+            style={styles.video}
+          />
+        )}
+
+        <ActionButtons
+          imageUrl={imageUrl}
+          onTryAnotherStyle={() => router.replace('/')}
+          onBackHome={() => router.replace('/')}
+        />
+      </ScrollView>
+    </View>
   );
 }
 
@@ -150,5 +194,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.text,
     fontWeight: '500',
+  },
+  videoButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    marginTop: spacing.md,
+    marginHorizontal: spacing.lg,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+  },
+  videoButtonDisabled: { opacity: 0.55 },
+  videoButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  video: {
+    width: '100%',
+    height: 360,
+    marginTop: spacing.md,
+    backgroundColor: '#000',
   },
 });

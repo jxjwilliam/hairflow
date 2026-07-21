@@ -224,7 +224,7 @@ export default function HistoryScreen() {
           );
         }}
       />
-      <Text style={styles.hint}>长按可删除单张 · 下拉刷新</Text>
+      <Text style={styles.hint}>点开可生成短视频 · 长按删除 · 下拉刷新</Text>
     </FocusedScreen>
   );
 }
